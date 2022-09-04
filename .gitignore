@@ -1,0 +1,3 @@
+password.txt
+flask_secret_key.txt
+__pycache__/*
