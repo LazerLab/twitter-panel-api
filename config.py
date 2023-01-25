@@ -16,3 +16,7 @@ ES_URL = "https://elastic:{}@localhost:9200".format(ES_PASSWORD)
 
 VALID_AGG_TERMS = {"day", "week", "month"}
 AGG_TO_ROUND_KEY = {"day": "d", "week": "w", "month": "m"}
+
+CSV_DATA_LOC = '/home/asmithh/god_all_tweets.tsv'
+CSV_TEXT_COL = 'text'
+

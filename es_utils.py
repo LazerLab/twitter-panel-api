@@ -33,7 +33,7 @@ def elastic_query_for_keyword(keyword: str):
     return res
 
 
-def elastic_query_users(users: list(str)):
+def elastic_query_users(users: list[str]):
     """
     Given a list of users (as user Twitter profile IDs),
     pull all users from ES that have an ID in the list.

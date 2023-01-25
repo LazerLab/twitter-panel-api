@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 
 from .api_utils import int_or_nan
-from .config import AGG_TO_ROUND_KEY
+from .config import AGG_TO_ROUND_KEY, CSV_DATA_LOC, CSV_TEXT_COL
 from .es_utils import elastic_query_for_keyword, elastic_query_users
 
 
@@ -34,6 +34,28 @@ class MediaSource(object):
         # intended to be used as the function called by the Flask API when it wants data.
         pass
 
+    def aggregate_tabular_data(self, full_df, ts_col_name, agg_by):
+        agg_freq_str = AGG_TO_ROUND_KEY[agg_by]
+        full_df["{}_rounded".format(agg_by)] = pd.to_datetime(full_df[ts_col_name]).dt.floor("d")
+        # bucket age by decade
+        full_df["vb_age_decade"] = full_df["voterbase_age"].apply(
+            lambda b: str(10 * int(b / 10)) + " - " + str(10 + 10 * int(b / 10))
+        )
+        # aggregate by day
+        table = full_df.groupby("{}_rounded".format(agg_by))
+        # get all value counts for each day
+        results = []
+        for ts, t in table:
+            t_dict = {"ts": ts, "n_tweets": len(t), "n_tweeters": len(set(t["userid"]))}
+            for i in [
+                "tsmart_state",
+                "vb_age_decade",
+                "voterbase_gender",
+                "voterbase_race",
+            ]:
+                t_dict[i] = t[i].value_counts().to_dict()
+            results.append(t_dict)
+        return results
 
 class ElasticsearchTwitterPanelSource(MediaSource):
     def query_from_api(self, search_query="", agg_by="day"):
@@ -68,27 +90,15 @@ class ElasticsearchTwitterPanelSource(MediaSource):
         # need them to both be ints to do the join
         # join results with the user demographics by twitter user ID
         full_df = res_df.merge(users_df, left_on="userid", right_on="twProfileID")
-
+       
         # right now we're aggregating results by day. this can change later.
-        agg_freq_str = AGG_TO_ROUND_KEY[agg_by]
-        full_df["day_rounded"] = pd.to_datetime(full_df["timestamp"]).dt.floor("d")
-        # bucket age by decade
-        full_df["vb_age_decade"] = full_df["voterbase_age"].apply(
-            lambda b: str(10 * int(b / 10)) + " - " + str(10 + 10 * int(b / 10))
-        )
-        # aggregate by day
-        table = full_df.groupby("{}_rounded".format(agg_by))
-        # get all value counts for each day
-        results = []
-        for ts, t in table:
-            t_dict = {"ts": ts, "n_tweets": len(t), "n_tweeters": len(set(t["userid"]))}
-            for i in [
-                "tsmart_state",
-                "vb_age_decade",
-                "voterbase_gender",
-                "voterbase_race",
-            ]:
-                t_dict[i] = t[i].value_counts().to_dict()
-            results.append(t_dict)
 
-        return results
+        return self.aggregate_tabular_data(full_df, 'timestamp', agg_by)
+
+class CSVSource(MediaSource):
+    def query_from_api(self, search_query="", agg_by="day"):
+        df = pd.read_csv(CSV_DATA_LOC, sep='\t')
+        df['created_at'] = pd.to_datetime(df['created_at'], utc=True)
+        df['to_take'] = df[CSV_TEXT_COL].apply(lambda b: search_query in b.lower())
+        full_df = df[df['to_take']]
+        return self.aggregate_tabular_data(full_df, 'created_at',  agg_by)
