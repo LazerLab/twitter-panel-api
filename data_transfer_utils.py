@@ -12,44 +12,18 @@ import findspark
 findspark.init()
 findspark.os.environ["PYSPARK_PYTHON"] = "/usr/bin/python3"
 findspark.os.environ["PYSPARK_DRIVER_PYTHON"] = "/usr/bin/python3"
-import pandas as pd
-from elasticsearch import Elasticsearch
-from elasticsearch import RequestsHttpConnection
 
+import pandas as pd
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
-import elasticsearch
-from elasticsearch_dsl import (
-    analyzer,
-    Search,
-    tokenizer,
-    Date,
-    Document,
-    Text,
-    Integer,
-    Boolean,
-)
-from elasticsearch_dsl.connections import connections
 import yaml
+
+from .config import ES_PASSWORD, TWEET_SCHEMA, VOTER_FILE_LOC, PANEL_TWEETS_LOC
 
 # setting global variables
 JOB_NAME = "twitter_dashboard"
 DEBUG = False
-TWEET_SCHEMA = "/net/data/twitter-covid/tweet_schema.json"
-VOTER_FILE_LOC = (
-    "hdfs://megatron.ccs.neu.edu/user/lab-lazer/TSmart-cleaner-Oct2017-rawFormat.csv"
-)
-PANEL_TWEETS_LOC = (
-    "hdfs://megatron.ccs.neu.edu/user/nir/panel_tweets/created_at_bucket=2022-06-16"
-)
-
-lines = []
-with open("password.txt", "r") as f:
-    for line in f.readlines():
-        lines.append(line.strip())
-
-PASSWORD = lines[0]
 
 
 class TweetDocument(Document):
@@ -76,7 +50,7 @@ def port_table_to_elastic():
     DO NOT RUN ME WITHOUT CHANGING THE DATA SOURCE!!!!!
     Right now, this function takes in data from a .tsv of tweets and the .tsv containing voter data.
     It puts this data in a format Elasticsearch likes and then puts the data into Elasticsearch.
-    
+
     Note that portions involving the Spark cluster are currently commented out.
     This is because the Spark cluster is in use so frequently, I didn't want to use it as my data source
     for a test version of the website.
@@ -106,7 +80,7 @@ def port_table_to_elastic():
     #         .getOrCreate()
     #     )
     TweetDocument.init()
-    
+
     # we're getting tweets from the panel (this is a sample TSV)
     panel_tweets = pd.read_csv(
         "/net/data/twitter-voters/text_samples/2021_09.tsv", sep="\t"
@@ -121,7 +95,7 @@ def port_table_to_elastic():
         "timestamp",
     ]
     print(panel_tweets.head(10))
-    # this is code leftover from Sumukh's work; 
+    # this is code leftover from Sumukh's work;
     # it should load panel tweets but will need modification for our purposes
     # Load panel tweets (use same columns as health_info)
     #     panel_tweets = (
@@ -251,47 +225,3 @@ def query_spark_for_keyword(keyword):
     )
     # should return a dataframe
     return panel_tweets.toPandas()
-
-
-# port_table_to_elastic()
-
-
-def elastic_query_for_keyword(keyword):
-    """
-    Given a string (keyword), return all tweets in the tweets index that contain that string.
-    Return as raw ES output.
-    """
-    es = Elasticsearch(
-        "https://elastic:{}@localhost:9200".format(PASSWORD),
-        verify_certs=False,
-        ssl_show_warn=False,
-        connection_class=RequestsHttpConnection,
-    )
-    s = Search(using=es).query("match", text=keyword)
-    res = s.execute()
-    return res
-
-
-def elastic_query_users(users):
-    """
-    Given a list of users (as user Twitter profile IDs),
-    pull all users from ES that have an ID in the list.
-    Return as raw ES output.
-    """
-    es = Elasticsearch(
-        "https://elastic:{}@localhost:9200".format(PASSWORD),
-        verify_certs=False,
-        ssl_show_warn=False,
-        connection_class=RequestsHttpConnection,
-    )
-    s = Search(using=es, index="users").query(
-        "terms", twProfileID=[str(u) for u in users]
-    )
-    res = s.execute()
-    res2 = []
-    for hit in res:
-        res2.append(hit.to_dict())
-    return res2
-
-
-# print(elastic_query_for_keyword('dog'))
