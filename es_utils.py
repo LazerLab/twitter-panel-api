@@ -23,13 +23,13 @@ def elastic_query_for_keyword(keyword: str):
     Return as raw ES output.
     """
     es = Elasticsearch(
-        "https://elastic:{}@localhost:9200".format(ES_PASSWORD),
+        "https://elastic:{}@achtung06:9200".format(ES_PASSWORD),
         verify_certs=False,
         ssl_show_warn=False,
         connection_class=RequestsHttpConnection,
     )
-    s = Search(using=es).query("match", text=keyword)
-    res = s.execute()
+    s = Search(using=es, index="big-tweets").query("match", full_text=keyword)
+    res = s.scan()
     return res
 
 
@@ -40,16 +40,13 @@ def elastic_query_users(users: list[str]):
     Return as raw ES output.
     """
     es = Elasticsearch(
-        "https://elastic:{}@localhost:9200".format(ES_PASSWORD),
+        "https://elastic:{}@achtung06:9200".format(ES_PASSWORD),
         verify_certs=False,
         ssl_show_warn=False,
         connection_class=RequestsHttpConnection,
     )
-    s = Search(using=es, index="users").query(
+    s = Search(using=es, index="voters").query(
         "terms", twProfileID=[str(u) for u in users]
     )
-    res = s.execute()
-    res2 = []
-    for hit in res:
-        res2.append(hit.to_dict())
-    return res2
+    res = [hit.to_dict() for hit in s.scan()]
+    return res
