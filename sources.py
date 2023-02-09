@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+import numpy as np
 
 from .api_utils import int_or_nan
 from .config import AGG_TO_ROUND_KEY, CSV_DATA_LOC, CSV_TEXT_COL
@@ -41,7 +42,7 @@ class MediaSource(object):
         ).dt.floor("d")
         # bucket age by decade
         full_df["vb_age_decade"] = full_df["voterbase_age"].apply(
-            lambda b: str(10 * int(b / 10)) + " - " + str(10 + 10 * int(b / 10))
+            lambda b: str(10 * int(b / 10)) + " - " + str(10 + 10 * int(b / 10)) if not np.isnan(b) else "unknown"
         )
         # aggregate by day
         table = full_df.groupby("{}_rounded".format(agg_by))
@@ -76,27 +77,29 @@ class ElasticsearchTwitterPanelSource(MediaSource):
         for hit in res:
             results.append(hit.to_dict())
 
-        if len(res) == 0:
+        if len(results) == 0:
             results = []
             return results
         else:
             res_df = pd.DataFrame(results)
             # otherwise we make a dataframe
 
+        res_df["userid"] = res_df["user"].apply(lambda u: int_or_nan(u['id']))
+
         # grab all the users who tweeted
         users = elastic_query_users(res_df["userid"])
         users_df = pd.DataFrame(users)
 
         # coerce user IDs
-        res_df["userid"] = res_df["userid"].apply(lambda b: int_or_nan(b))
         users_df["twProfileID"] = users_df["twProfileID"].apply(lambda b: int_or_nan(b))
         # need them to both be ints to do the join
         # join results with the user demographics by twitter user ID
         full_df = res_df.merge(users_df, left_on="userid", right_on="twProfileID")
+        full_df = full_df.rename(columns={"vf_source_state": "tsmart_state"})
 
         # right now we're aggregating results by day. this can change later.
 
-        return self.aggregate_tabular_data(full_df, "timestamp", agg_by)
+        return self.aggregate_tabular_data(full_df, "created_at", agg_by)
 
 
 class CSVSource(MediaSource):
