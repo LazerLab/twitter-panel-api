@@ -1,3 +1,6 @@
 password.txt
 flask_secret_key.txt
 __pycache__/*
+venv/*
+es_password.txt
+*.ini
