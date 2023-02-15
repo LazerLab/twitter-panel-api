@@ -5,6 +5,7 @@ import numpy as np
 from .api_utils import int_or_nan
 from .config import AGG_TO_ROUND_KEY, CSV_DATA_LOC, CSV_TEXT_COL
 from .es_utils import elastic_query_for_keyword, elastic_query_users
+from .sql_utils import collect_voters
 
 
 class MediaSource(object):
@@ -28,7 +29,7 @@ class MediaSource(object):
         query_text should be a string;
         this will return a requests.Response object.
         """
-        return requests.post(self.source_url, query_test)
+        return requests.post(self.source_url, query_text)
 
     def query_from_api(self, **kwargs):
         # implement this in the subclass.
@@ -38,23 +39,26 @@ class MediaSource(object):
     def aggregate_tabular_data(self, full_df, ts_col_name, agg_by):
         agg_freq_str = AGG_TO_ROUND_KEY[agg_by]
         full_df["{}_rounded".format(agg_by)] = pd.to_datetime(
-            full_df[ts_col_name]
-        ).dt.floor("d")
+            full_df[ts_col_name]).dt.to_period(agg_freq_str).dt.start_time
         # bucket age by decade
         full_df["vb_age_decade"] = full_df["voterbase_age"].apply(
-            lambda b: str(10 * int(b / 10)) + " - " + str(10 + 10 * int(b / 10)) if not np.isnan(b) else "unknown"
-        )
+            lambda b: str(10 * int(b / 10)) + " - " + str(10 + 10 * int(
+                b / 10)) if not np.isnan(b) else "unknown")
         # aggregate by day
         table = full_df.groupby("{}_rounded".format(agg_by))
         # get all value counts for each day
         results = []
         for ts, t in table:
-            t_dict = {"ts": ts, "n_tweets": len(t), "n_tweeters": len(set(t["userid"]))}
+            t_dict = {
+                "ts": ts,
+                "n_tweets": len(t),
+                "n_tweeters": len(set(t["userid"]))
+            }
             for i in [
-                "tsmart_state",
-                "vb_age_decade",
-                "voterbase_gender",
-                "voterbase_race",
+                    "tsmart_state",
+                    "vb_age_decade",
+                    "voterbase_gender",
+                    "voterbase_race",
             ]:
                 t_dict[i] = t[i].value_counts().to_dict()
             results.append(t_dict)
@@ -62,6 +66,7 @@ class MediaSource(object):
 
 
 class ElasticsearchTwitterPanelSource(MediaSource):
+
     def query_from_api(self, search_query="", agg_by="day"):
         """
         query function for the API to pull data out of Elasticsearch based on a search query.
@@ -87,14 +92,17 @@ class ElasticsearchTwitterPanelSource(MediaSource):
         res_df["userid"] = res_df["user"].apply(lambda u: int_or_nan(u['id']))
 
         # grab all the users who tweeted
-        users = elastic_query_users(res_df["userid"])
+        users = collect_voters(set(res_df['userid']))
         users_df = pd.DataFrame(users)
 
         # coerce user IDs
-        users_df["twProfileID"] = users_df["twProfileID"].apply(lambda b: int_or_nan(b))
+        users_df["twProfileID"] = users_df["twProfileID"].apply(
+            lambda b: int_or_nan(b))
         # need them to both be ints to do the join
         # join results with the user demographics by twitter user ID
-        full_df = res_df.merge(users_df, left_on="userid", right_on="twProfileID")
+        full_df = res_df.merge(users_df,
+                               left_on="userid",
+                               right_on="twProfileID")
         full_df = full_df.rename(columns={"vf_source_state": "tsmart_state"})
 
         # right now we're aggregating results by day. this can change later.
@@ -103,9 +111,11 @@ class ElasticsearchTwitterPanelSource(MediaSource):
 
 
 class CSVSource(MediaSource):
+
     def query_from_api(self, search_query="", agg_by="day"):
         df = pd.read_csv(CSV_DATA_LOC, sep="\t")
         df["created_at"] = pd.to_datetime(df["created_at"], utc=True)
-        df["to_take"] = df[CSV_TEXT_COL].apply(lambda b: search_query in b.lower())
+        df["to_take"] = df[CSV_TEXT_COL].apply(
+            lambda b: search_query in b.lower())
         full_df = df[df["to_take"]]
         return self.aggregate_tabular_data(full_df, "created_at", agg_by)
