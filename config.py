@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+from typing import Any, Mapping
 
 TWEET_SCHEMA = "/net/data/twitter-covid/tweet_schema.json"
 VOTER_FILE_LOC = (
@@ -9,7 +10,8 @@ PANEL_TWEETS_LOC = (
 )
 
 
-def config(section, filename='config.ini'):
+def config(section: str, filename: str='config.ini') -> Mapping[str, Any]:
+    """Get a config file section as kwargs"""
     parser = ConfigParser()
     parser.read(filename)
 
@@ -30,3 +32,5 @@ AGG_TO_ROUND_KEY = {"day": "D", "week": "W", "month": "M"}
 
 CSV_DATA_LOC = "/home/asmithh/god_all_tweets.tsv"
 CSV_TEXT_COL = "text"
+
+DEMOGRAPHIC_FIELDS = ["tsmart_state", "vb_age_decade", "voterbase_gender", "voterbase_race"]

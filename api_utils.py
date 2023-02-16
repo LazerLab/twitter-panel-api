@@ -1,7 +1,7 @@
-from .config import VALID_AGG_TERMS
+from .config import VALID_AGG_TERMS, DEMOGRAPHIC_FIELDS
+from typing import Iterable
 
-
-def int_or_nan(b):
+def int_or_nan(b) -> int:
     """
     hopefully b is a string that converts nicely to an int.
     if it is not, we return 0.
@@ -14,7 +14,7 @@ def int_or_nan(b):
         return 0
 
 
-def validate_keyword_search_input(search_query: str, agg_by: str):
+def validate_keyword_search_input(search_query: str, time_agg: str, group_by: Iterable[str] = None) -> bool:
     """
     for the keyword_search endpoint, validate the two inputs from the user.
     search_query should be a string of length greater than 1,
@@ -25,6 +25,9 @@ def validate_keyword_search_input(search_query: str, agg_by: str):
         return False
     elif search_query is None:
         return False
-    if agg_by not in VALID_AGG_TERMS:
+    if time_agg not in VALID_AGG_TERMS:
         return False
+    if group_by is not None:
+        if any((d not in DEMOGRAPHIC_FIELDS for d in group_by)):
+            return False
     return True

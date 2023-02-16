@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from .api_utils import int_or_nan
-from .config import AGG_TO_ROUND_KEY, CSV_DATA_LOC, CSV_TEXT_COL
+from .config import AGG_TO_ROUND_KEY, CSV_DATA_LOC, CSV_TEXT_COL, DEMOGRAPHIC_FIELDS
 from .es_utils import elastic_query_for_keyword, elastic_query_users
 from .sql_utils import collect_voters
 
@@ -36,16 +36,16 @@ class MediaSource(object):
         # intended to be used as the function called by the Flask API when it wants data.
         pass
 
-    def aggregate_tabular_data(self, full_df, ts_col_name, agg_by):
-        agg_freq_str = AGG_TO_ROUND_KEY[agg_by]
-        full_df["{}_rounded".format(agg_by)] = pd.to_datetime(
+    def aggregate_tabular_data(self, full_df, ts_col_name, time_agg, group_by: list[str] = None):
+        agg_freq_str = AGG_TO_ROUND_KEY[time_agg]
+        full_df["{}_rounded".format(time_agg)] = pd.to_datetime(
             full_df[ts_col_name]).dt.to_period(agg_freq_str).dt.start_time
         # bucket age by decade
         full_df["vb_age_decade"] = full_df["voterbase_age"].apply(
             lambda b: str(10 * int(b / 10)) + " - " + str(10 + 10 * int(
                 b / 10)) if not np.isnan(b) else "unknown")
         # aggregate by day
-        table = full_df.groupby("{}_rounded".format(agg_by))
+        table = full_df.groupby("{}_rounded".format(time_agg))
         # get all value counts for each day
         results = []
         for ts, t in table:
@@ -54,13 +54,18 @@ class MediaSource(object):
                 "n_tweets": len(t),
                 "n_tweeters": len(set(t["userid"]))
             }
-            for i in [
-                    "tsmart_state",
-                    "vb_age_decade",
-                    "voterbase_gender",
-                    "voterbase_race",
-            ]:
+            for i in DEMOGRAPHIC_FIELDS:
                 t_dict[i] = t[i].value_counts().to_dict()
+            if group_by is not None:
+                count_label = group_by[0]
+                t_dict['groups'] = (
+                    t.groupby(group_by)[count_label]
+                    .count()
+                    .to_frame()
+                    .rename(columns={count_label: "count"})
+                    .reset_index()
+                    .to_dict('records')
+                )
             results.append(t_dict)
         return results
 

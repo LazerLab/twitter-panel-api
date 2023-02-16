@@ -1,7 +1,11 @@
 import psycopg2
 from .config import config
+from typing import Any, Iterable, Mapping
 
-def collect_voters(ids):
+def collect_voters(twitter_ids: Iterable[str]) -> Iterable[Mapping[str, Any]]:
+    """
+    Collect panel voters' information from their Twitter user IDs.
+    """
     temp_table_command = """
     CREATE TABLE temp (
         id varchar(255)
@@ -20,7 +24,7 @@ def collect_voters(ids):
     cur = conn.cursor()
 
     cur.execute(temp_table_command)
-    cur.executemany(fill_table_command, [(id,) for id in ids])
+    cur.executemany(fill_table_command, [(id,) for id in twitter_ids])
     cur.execute(collect_voters_command)
 
     voters = [x[0] for x in cur.fetchall()]
