@@ -72,7 +72,7 @@ class MediaSource(object):
 
 class ElasticsearchTwitterPanelSource(MediaSource):
 
-    def query_from_api(self, search_query="", agg_by="day"):
+    def query_from_api(self, search_query="", agg_by="day", group_by=None):
         """
         query function for the API to pull data out of Elasticsearch based on a search query.
         the data will then be aggregated at the level specified by agg_by.
@@ -112,7 +112,7 @@ class ElasticsearchTwitterPanelSource(MediaSource):
 
         # right now we're aggregating results by day. this can change later.
 
-        return self.aggregate_tabular_data(full_df, "created_at", agg_by)
+        return self.aggregate_tabular_data(full_df, "created_at", agg_by, group_by)
 
 
 class CSVSource(MediaSource):
