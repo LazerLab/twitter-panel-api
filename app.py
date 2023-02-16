@@ -22,7 +22,7 @@ def keyword_search():
     request_json = request.get_json()
     search_query = request_json["keyword_query"]
     agg_by = request_json["aggregate_time_period"]
-    group_by = request_json.get("cross_section")
+    group_by = request_json.get("cross_sections")
     if validate_keyword_search_input(search_query, agg_by, group_by):
         results = ElasticsearchTwitterPanelSource(ES_URL).query_from_api(
             search_query=search_query, agg_by=agg_by, group_by=group_by

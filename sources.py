@@ -59,7 +59,8 @@ class MediaSource(object):
             if group_by is not None:
                 count_label = group_by[0]
                 t_dict['groups'] = (
-                    t.groupby(group_by)[count_label]
+                    t.drop_duplicates(['userid'])
+                    .groupby(group_by)[count_label]
                     .count()
                     .to_frame()
                     .rename(columns={count_label: "count"})
