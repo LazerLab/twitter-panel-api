@@ -1,5 +1,6 @@
-from .config import VALID_AGG_TERMS, DEMOGRAPHIC_FIELDS
-from typing import Iterable
+from .config import VALID_AGG_TERMS, DEMOGRAPHIC_FIELDS, USER_COUNT_PRIVACY_THRESHOLD
+import itertools
+from typing import Any, Iterable, Mapping
 
 def int_or_nan(b) -> int:
     """
@@ -28,6 +29,20 @@ def validate_keyword_search_input(search_query: str, time_agg: str, group_by: It
     if time_agg not in VALID_AGG_TERMS:
         return False
     if group_by is not None:
-        if any((d not in DEMOGRAPHIC_FIELDS for d in group_by)):
+        if len([*group_by]) > len(set(group_by)) or any((d not in DEMOGRAPHIC_FIELDS for d in group_by)):
+            return False
+    return True
+
+def validate_keyword_search_output(response_data: Iterable[Mapping[str, Any]]) -> bool:
+    """
+    Ensure that returned aggregate results are reasonably protective of privacy. Specifically,
+    this function ensures no returned demographic counts are below the USER_COUNT_PRIVACY_THRESHOLD set
+    in the config.
+    """
+    for period in response_data:
+        if "groups" in period:
+            if any((group['count'] < USER_COUNT_PRIVACY_THRESHOLD for group in period['groups'])):
+                return False
+        elif any((period[dem] < USER_COUNT_PRIVACY_THRESHOLD for dem in DEMOGRAPHIC_FIELDS)):
             return False
     return True

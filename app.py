@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 import pandas as pd
 
 from .config import ES_URL, VALID_AGG_TERMS, AGG_TO_ROUND_KEY
-from .api_utils import int_or_nan, validate_keyword_search_input
+from .api_utils import int_or_nan, validate_keyword_search_input, validate_keyword_search_output
 from .sources import CSVSource, ElasticsearchTwitterPanelSource
 
 app = Flask(__name__)
@@ -19,6 +19,7 @@ def keyword_search():
     """
     basic endpoint for querying the ES-indexed portion of the twitter panel and their tweets
     """
+    message = "unknown error"
     request_json = request.get_json()
     search_query = request_json["keyword_query"]
     agg_by = request_json["aggregate_time_period"]
@@ -27,18 +28,22 @@ def keyword_search():
         results = ElasticsearchTwitterPanelSource(ES_URL).query_from_api(
             search_query=search_query, agg_by=agg_by, group_by=group_by
         )
-        return {
-            "query": search_query,
-            "agg_time_period": agg_by,
-            "response_data": results,
-        }
+        if validate_keyword_search_output(results):
+            return {
+                "query": search_query,
+                "agg_time_period": agg_by,
+                "response_data": results,
+            }
+        else:
+            message = "sample too small to be statistically useful"
     else:
         message = "invalid query"
-        return {
-            "query": search_query,
-            "agg_time_period": agg_by,
-            "response_data": message,
-        }
+
+    return {
+        "query": search_query,
+        "agg_time_period": agg_by,
+        "response_data": message,
+    }
 
 
 @app.route("/csv_keyword_search", methods=["GET", "POST"])

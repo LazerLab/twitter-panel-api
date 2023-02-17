@@ -34,3 +34,5 @@ CSV_DATA_LOC = "/home/asmithh/god_all_tweets.tsv"
 CSV_TEXT_COL = "text"
 
 DEMOGRAPHIC_FIELDS = ["tsmart_state", "vb_age_decade", "voterbase_gender", "voterbase_race"]
+
+USER_COUNT_PRIVACY_THRESHOLD = 10
