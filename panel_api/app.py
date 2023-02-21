@@ -1,17 +1,16 @@
 from flask import Flask, jsonify, request
 import pandas as pd
 
-from .config import ES_URL, VALID_AGG_TERMS, AGG_TO_ROUND_KEY
-from .api_utils import int_or_nan, validate_keyword_search_input, validate_keyword_search_output
+from .config import FLASK
+from .api_utils import (
+    int_or_nan,
+    validate_keyword_search_input,
+    validate_keyword_search_output,
+)
 from .sources import CSVSource, ElasticsearchTwitterPanelSource
 
 app = Flask(__name__)
-lines = []
-with open("flask_secret_key.txt", "r") as f:
-    for line in f.readlines():
-        lines.append(line.strip())
-
-app.config["SECRET_KEY"] = lines[0]
+app.config.update(FLASK)
 
 
 @app.route("/keyword_search", methods=["GET", "POST"])
@@ -21,11 +20,11 @@ def keyword_search():
     """
     message = "unknown error"
     request_json = request.get_json()
-    search_query = request_json["keyword_query"]
-    agg_by = request_json["aggregate_time_period"]
+    search_query = request_json.get("keyword_query")
+    agg_by = request_json.get("aggregate_time_period")
     group_by = request_json.get("cross_sections")
     if validate_keyword_search_input(search_query, agg_by, group_by):
-        results = ElasticsearchTwitterPanelSource(ES_URL).query_from_api(
+        results = ElasticsearchTwitterPanelSource().query_from_api(
             search_query=search_query, agg_by=agg_by, group_by=group_by
         )
         if validate_keyword_search_output(results):

@@ -6,3 +6,4 @@ es_password.txt
 *.ini
 *.egg-info
 build/*
+.vscode
