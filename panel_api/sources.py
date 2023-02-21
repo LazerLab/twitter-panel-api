@@ -42,7 +42,9 @@ class MediaSource(object):
         # get all value counts for each day
         results = []
         for ts, t in table:
-            t_dict = {"ts": ts, "n_tweets": len(t), "n_tweeters": len(set(t["userid"]))}
+            t_dict = {"ts": ts, "n_tweets": len(t)}
+            t = t.drop_duplicates(["userid"])
+            t_dict["n_tweeters"] = len(t)
             for i in DEMOGRAPHIC_FIELDS:
                 t_dict[i] = t[i].value_counts().to_dict()
             if group_by is not None:

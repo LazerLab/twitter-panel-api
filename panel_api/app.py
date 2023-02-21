@@ -1,9 +1,7 @@
-from flask import Flask, jsonify, request
-import pandas as pd
+from flask import Flask, request
 
 from .config import FLASK
 from .api_utils import (
-    int_or_nan,
     validate_keyword_search_input,
     validate_keyword_search_output,
 )
