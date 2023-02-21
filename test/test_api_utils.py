@@ -119,6 +119,26 @@ def test_keyword_search_output_invalid():
                 ],
             }
         ],
+        [  # Age/state cross-section under threshold, groups OK
+            {
+                "n_tweets": 1000,
+                "n_tweeters": 100,
+                "vb_age_decade": {"10 - 20": 50, "80 - 90": 50},
+                "tsmart_state": {"AL": 20, "CA": 80},
+                "voterbase_gender": {"Male": 40, "Female": 50, "Unknown": 10},
+                "voterbase_race": {
+                    "Caucasian": 80,
+                    "African-American": 11,
+                    "Hispanic": 9,
+                },
+                "groups": [
+                    {"vb_age_decade": "10 - 20", "tsmart_state": "AL", "count": 10},
+                    {"vb_age_decade": "10 - 20", "tsmart_state": "CA", "count": 40},
+                    {"vb_age_decade": "80 - 90", "tsmart_state": "AL", "count": 10},
+                    {"vb_age_decade": "80 - 90", "tsmart_state": "CA", "count": 40},
+                ],
+            }
+        ],
         [  # Second period invalid (no groups)
             {
                 "n_tweets": 1000,

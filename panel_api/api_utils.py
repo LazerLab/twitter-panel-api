@@ -54,7 +54,7 @@ def validate_keyword_search_output(
         if "groups" in period:
             if any((group["count"] < privacy_threshold for group in period["groups"])):
                 return False
-        elif any(
+        if any(
             (
                 any(count < privacy_threshold for count in period[dem].values())
                 for dem in DEMOGRAPHIC_FIELDS
