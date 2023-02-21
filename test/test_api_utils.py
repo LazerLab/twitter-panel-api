@@ -85,7 +85,7 @@ def test_keyword_search_output_valid():
 def test_keyword_search_output_invalid():
     privacy_threshold = 10
     invalid_outputs = [
-        [ # Race demographic under threshold
+        [  # Race demographic under threshold
             {
                 "n_tweets": 1000,
                 "n_tweeters": 100,
@@ -99,7 +99,7 @@ def test_keyword_search_output_invalid():
                 },
             }
         ],
-        [ # Age/state cross-section under threshold
+        [  # Age/state cross-section under threshold
             {
                 "n_tweets": 1000,
                 "n_tweeters": 100,
@@ -119,7 +119,7 @@ def test_keyword_search_output_invalid():
                 ],
             }
         ],
-        [ # Second period invalid (no groups)
+        [  # Second period invalid (no groups)
             {
                 "n_tweets": 1000,
                 "n_tweeters": 100,
@@ -143,9 +143,9 @@ def test_keyword_search_output_invalid():
                     "African-American": 9,
                     "Hispanic": 11,
                 },
-            }
+            },
         ],
-        [ # Second period invalid (with groups)
+        [  # Second period invalid (with groups)
             {
                 "n_tweets": 1000,
                 "n_tweeters": 100,
@@ -181,7 +181,7 @@ def test_keyword_search_output_invalid():
                     {"vb_age_decade": "80 - 90", "tsmart_state": "AL", "count": 11},
                     {"vb_age_decade": "80 - 90", "tsmart_state": "CA", "count": 39},
                 ],
-            }
+            },
         ],
     ]
 
