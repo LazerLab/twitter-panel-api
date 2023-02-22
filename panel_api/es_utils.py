@@ -14,7 +14,7 @@ from elasticsearch_dsl import (
 )
 from elasticsearch_dsl.connections import connections
 
-from .config import ELASTICSEARCH
+from .config import Config
 
 
 def elastic_query_for_keyword(keyword: str):
@@ -23,7 +23,7 @@ def elastic_query_for_keyword(keyword: str):
     Return as raw ES output.
     """
     es = Elasticsearch(
-        **ELASTICSEARCH,
+        **Config()["elasticsearch"],
         verify_certs=False,
         ssl_show_warn=False,
         connection_class=RequestsHttpConnection,
@@ -40,7 +40,7 @@ def elastic_query_users(users: list[str]):
     Return as raw ES output.
     """
     es = Elasticsearch(
-        **ELASTICSEARCH,
+        **Config()["elasticsearch"],
         verify_certs=False,
         ssl_show_warn=False,
         connection_class=RequestsHttpConnection,

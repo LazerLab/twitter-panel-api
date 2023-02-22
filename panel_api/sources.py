@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from .api_utils import int_or_nan
-from .config import AGG_TO_ROUND_KEY, CSV_DATA_LOC, CSV_TEXT_COL, DEMOGRAPHIC_FIELDS
+from .config import Config, AGG_TO_ROUND_KEY, DEMOGRAPHIC_FIELDS
 from .es_utils import elastic_query_for_keyword, elastic_query_users
 from .sql_utils import collect_voters
 
@@ -105,8 +105,11 @@ class ElasticsearchTwitterPanelSource(MediaSource):
 
 class CSVSource(MediaSource):
     def query_from_api(self, search_query="", agg_by="day"):
-        df = pd.read_csv(CSV_DATA_LOC, sep="\t")
+        cfg = Config()
+        df = pd.read_csv(cfg["csv_data_loc"], sep="\t")
         df["created_at"] = pd.to_datetime(df["created_at"], utc=True)
-        df["to_take"] = df[CSV_TEXT_COL].apply(lambda b: search_query in b.lower())
+        df["to_take"] = df[cfg["csv_text_col"]].apply(
+            lambda b: search_query in b.lower()
+        )
         full_df = df[df["to_take"]]
         return self.aggregate_tabular_data(full_df, "created_at", agg_by)

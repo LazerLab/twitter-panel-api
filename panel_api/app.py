@@ -1,6 +1,6 @@
 from flask import Flask, request
 
-from .config import FLASK
+from .config import Config
 from .api_utils import (
     validate_keyword_search_input,
     validate_keyword_search_output,
@@ -8,7 +8,7 @@ from .api_utils import (
 from .sources import CSVSource, ElasticsearchTwitterPanelSource
 
 app = Flask(__name__)
-app.config.update(FLASK)
+app.config.update(Config()["flask"])
 
 
 @app.route("/keyword_search", methods=["GET", "POST"])

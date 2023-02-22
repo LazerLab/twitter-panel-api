@@ -1,5 +1,5 @@
 import psycopg2
-from .config import POSTGRESQL
+from .config import Config
 from typing import Any, Iterable, Mapping
 
 
@@ -21,7 +21,7 @@ def collect_voters(twitter_ids: Iterable[str]) -> Iterable[Mapping[str, Any]]:
     ON voters.twProfileID=temp.id
     """
 
-    conn = psycopg2.connect(**POSTGRESQL)
+    conn = psycopg2.connect(**Config()["postgresql"])
     cur = conn.cursor()
 
     cur.execute(temp_table_command)

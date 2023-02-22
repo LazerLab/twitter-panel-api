@@ -1,4 +1,4 @@
-from .config import VALID_AGG_TERMS, DEMOGRAPHIC_FIELDS, USER_COUNT_PRIVACY_THRESHOLD
+from .config import Config, VALID_AGG_TERMS, DEMOGRAPHIC_FIELDS
 import itertools
 from typing import Any, Iterable, Mapping
 
@@ -48,7 +48,7 @@ def validate_keyword_search_output(
     If no threshold is given, then USER_COUNT_PRIVACY_THRESHOLD will be used.
     """
     if privacy_threshold is None:
-        privacy_threshold = USER_COUNT_PRIVACY_THRESHOLD
+        privacy_threshold = Config()["user_count_privacy_threshold"]
 
     for period in response_data:
         if "groups" in period:
