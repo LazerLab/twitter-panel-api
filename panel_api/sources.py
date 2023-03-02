@@ -1,9 +1,10 @@
 import requests
 import pandas as pd
 import numpy as np
+import itertools
 
 from .api_utils import int_or_nan
-from .config import Config, AGG_TO_ROUND_KEY, DEMOGRAPHIC_FIELDS
+from .config import Config, AGG_TO_ROUND_KEY, DEMOGRAPHIC_FIELDS, VALUES
 from .es_utils import elastic_query_for_keyword, elastic_query_users
 from .sql_utils import collect_voters
 
@@ -23,7 +24,12 @@ class MediaSource(object):
         pass
 
     def aggregate_tabular_data(
-        self, full_df, ts_col_name, time_agg, group_by: list[str] = None
+        self,
+        full_df,
+        ts_col_name,
+        time_agg,
+        group_by: list[str] = None,
+        fill_zeros=False,
     ):
         agg_freq_str = AGG_TO_ROUND_KEY[time_agg]
         full_df["{}_rounded".format(time_agg)] = (
@@ -59,11 +65,55 @@ class MediaSource(object):
                     .to_dict("records")
                 )
             results.append(t_dict)
+        if fill_zeros:
+            results = self.fill_zeros(results)
         return results
+
+    def fill_zeros(self, results):
+        filled_results = []
+
+        def nested_put(d, *keys, value):
+            for key in keys[:-1]:
+                if key not in d:
+                    d[key] = {}
+                d = d[key]
+            d[keys[-1]] = value
+
+        for period in results:
+            filled_period = period.copy()
+            for dem in DEMOGRAPHIC_FIELDS:
+                filled_period[dem] = {
+                    value: period[dem][value] if value in period[dem] else 0
+                    for value in VALUES[dem]
+                }
+            if "groups" in period:
+                group_by = [
+                    field
+                    for field in period["groups"][0].keys()
+                    if not field == "count"
+                ]
+                all_groups = itertools.product(*[VALUES[field] for field in group_by])
+                all_groups = [
+                    {field: value for field, value in zip(group_by, group)}
+                    for group in all_groups
+                ]
+                group_tree = {}
+                for group in all_groups:
+                    group["count"] = 0
+                    group_values = [group[field] for field in group_by]
+                    nested_put(group_tree, *group_values, value=group)
+                for group in period["groups"]:
+                    group_values = [group[field] for field in group_by]
+                    nested_put(group_tree, *group_values, "count", value=group["count"])
+                filled_period["groups"] = all_groups
+            filled_results.append(filled_period)
+        return filled_results
 
 
 class ElasticsearchTwitterPanelSource(MediaSource):
-    def query_from_api(self, search_query="", agg_by="day", group_by=None):
+    def query_from_api(
+        self, search_query="", agg_by="day", group_by=None, fill_zeros=False
+    ):
         """
         query function for the API to pull data out of Elasticsearch based on a search query.
         the data will then be aggregated at the level specified by agg_by.
@@ -100,7 +150,9 @@ class ElasticsearchTwitterPanelSource(MediaSource):
 
         # right now we're aggregating results by day. this can change later.
 
-        return self.aggregate_tabular_data(full_df, "created_at", agg_by, group_by)
+        return self.aggregate_tabular_data(
+            full_df, "created_at", agg_by, group_by, fill_zeros=fill_zeros
+        )
 
 
 class CSVSource(MediaSource):
