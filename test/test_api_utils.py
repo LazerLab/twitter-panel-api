@@ -59,14 +59,22 @@ def test_keyword_search_censor_output(valid_outputs, invalid_outputs):
 
     for output in valid_outputs:
         assert output == api_utils.censor_keyword_search_output(
-            copy.deepcopy(output), 10
+            copy.deepcopy(output), 10, remove_censored_values=True
+        )
+        assert output == api_utils.censor_keyword_search_output(
+            copy.deepcopy(output), 10, remove_censored_values=False
         )
 
     for output in invalid_outputs:
-        validated_output = api_utils.censor_keyword_search_output(
-            copy.deepcopy(output), 10
+        validated_output_removed = api_utils.censor_keyword_search_output(
+            copy.deepcopy(output), 10, remove_censored_values=True
         )
-        assert api_utils.validate_keyword_search_output(validated_output, 10)
+        validated_output_replaced = api_utils.censor_keyword_search_output(
+            copy.deepcopy(output), 10, remove_censored_values=False
+        )
+        assert api_utils.validate_keyword_search_output(validated_output_removed, 10)
+        print(validated_output_replaced)
+        assert api_utils.validate_keyword_search_output(validated_output_replaced, 10)
 
 
 @pytest.fixture

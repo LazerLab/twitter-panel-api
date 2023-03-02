@@ -52,11 +52,21 @@ def validate_keyword_search_output(
 
     for period in response_data:
         if "groups" in period:
-            if any((group["count"] < privacy_threshold for group in period["groups"])):
+            if any(
+                (
+                    group["count"] < privacy_threshold
+                    for group in period["groups"]
+                    if group["count"] is not None
+                )
+            ):
                 return False
         if any(
             (
-                any(count < privacy_threshold for count in period[dem].values())
+                any(
+                    count < privacy_threshold
+                    for count in period[dem].values()
+                    if count is not None
+                )
                 for dem in DEMOGRAPHIC_FIELDS
             )
         ):
@@ -65,7 +75,9 @@ def validate_keyword_search_output(
 
 
 def censor_keyword_search_output(
-    response_data: Iterable[Mapping[str, Any]], privacy_threshold: int = None
+    response_data: Iterable[Mapping[str, Any]],
+    privacy_threshold: int = None,
+    remove_censored_values=True,
 ) -> Iterable[Mapping[str, Any]]:
     """
     Enforce that returned aggregate result counts must equal or exceed the privacy threshold.
@@ -76,17 +88,33 @@ def censor_keyword_search_output(
     if privacy_threshold is None:
         privacy_threshold = Config()["user_count_privacy_threshold"]
 
-    for period in response_data:
-        if "groups" in period:
-            period["groups"] = [
-                *filter(
-                    lambda group: group["count"] >= privacy_threshold, period["groups"]
-                )
-            ]
-        for dem in DEMOGRAPHIC_FIELDS:
-            period[dem] = {
-                category: count
-                for category, count in period[dem].items()
-                if count >= privacy_threshold
-            }
+    if remove_censored_values:
+        for period in response_data:
+            if "groups" in period:
+                period["groups"] = [
+                    *filter(
+                        lambda group: group["count"] >= privacy_threshold,
+                        period["groups"],
+                    )
+                ]
+            for dem in DEMOGRAPHIC_FIELDS:
+                period[dem] = {
+                    category: count
+                    for category, count in period[dem].items()
+                    if count >= privacy_threshold
+                }
+    else:
+        for period in response_data:
+            if "groups" in period:
+                groups = period["groups"]
+                period["groups"] = []
+                for group in groups:
+                    if group["count"] < privacy_threshold:
+                        group["count"] = None
+                    period["groups"].append(group)
+            for dem in DEMOGRAPHIC_FIELDS:
+                period[dem] = {
+                    category: count if count >= privacy_threshold else None
+                    for category, count in period[dem].items()
+                }
     return response_data
