@@ -11,9 +11,8 @@ _default_config = {
     "user_count_privacy_threshold": 10,
     "flask": {"SECRET_KEY": "flask_secret_key"},
     "elasticsearch": {
-        "host": "localhost",
-        "port": "9200",
-        "basic_auth": ("elastic", "password"),
+        "hosts": [{"host": "localhost", "port": 9200}],
+        "http_auth": ("elastic", "password"),
     },
     "postgresql": {
         "host": "localhost",
