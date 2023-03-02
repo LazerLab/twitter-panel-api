@@ -28,7 +28,7 @@ def keyword_search():
         return {
             "query": search_query,
             "agg_time_period": agg_by,
-            "response_data": censor_keyword_search_output(results),
+            "response_data": censor_keyword_search_output(results, remove_censored_values=False),
         }
     else:
         message = "invalid query"
