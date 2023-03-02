@@ -1,6 +1,7 @@
 import panel_api.api_utils as api_utils
 import pytest
 from unittest.mock import patch
+import copy
 
 
 def test_keyword_search_input_valid():
@@ -39,9 +40,38 @@ def test_keyword_search_input_invalid():
         assert not api_utils.validate_keyword_search_input(**input)
 
 
-def test_keyword_search_output_valid():
+def test_keyword_search_output_valid(valid_outputs):
     privacy_threshold = 10
-    valid_outputs = [
+
+    for output in valid_outputs:
+        assert api_utils.validate_keyword_search_output(output, privacy_threshold)
+
+
+def test_keyword_search_output_invalid(invalid_outputs):
+    privacy_threshold = 10
+
+    for output in invalid_outputs:
+        assert not api_utils.validate_keyword_search_output(output, privacy_threshold)
+
+
+def test_keyword_search_censor_output(valid_outputs, invalid_outputs):
+    privacy_threshold = 10
+
+    for output in valid_outputs:
+        assert output == api_utils.censor_keyword_search_output(
+            copy.deepcopy(output), 10
+        )
+
+    for output in invalid_outputs:
+        validated_output = api_utils.censor_keyword_search_output(
+            copy.deepcopy(output), 10
+        )
+        assert api_utils.validate_keyword_search_output(validated_output, 10)
+
+
+@pytest.fixture
+def valid_outputs():
+    return [
         [
             {
                 "n_tweets": 1000,
@@ -78,13 +108,10 @@ def test_keyword_search_output_valid():
         ],
     ]
 
-    for output in valid_outputs:
-        assert api_utils.validate_keyword_search_output(output, privacy_threshold)
 
-
-def test_keyword_search_output_invalid():
-    privacy_threshold = 10
-    invalid_outputs = [
+@pytest.fixture
+def invalid_outputs():
+    return [
         [  # Race demographic under threshold
             {
                 "n_tweets": 1000,
@@ -204,6 +231,3 @@ def test_keyword_search_output_invalid():
             },
         ],
     ]
-
-    for output in invalid_outputs:
-        assert not api_utils.validate_keyword_search_output(output, privacy_threshold)

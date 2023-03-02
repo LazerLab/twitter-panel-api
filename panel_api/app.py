@@ -3,7 +3,7 @@ from flask import Flask, request
 from .config import Config
 from .api_utils import (
     validate_keyword_search_input,
-    validate_keyword_search_output,
+    censor_keyword_search_output,
 )
 from .sources import CSVSource, ElasticsearchTwitterPanelSource
 
@@ -25,14 +25,11 @@ def keyword_search():
         results = ElasticsearchTwitterPanelSource().query_from_api(
             search_query=search_query, agg_by=agg_by, group_by=group_by
         )
-        if validate_keyword_search_output(results):
-            return {
-                "query": search_query,
-                "agg_time_period": agg_by,
-                "response_data": results,
-            }
-        else:
-            message = "sample too small to be statistically useful"
+        return {
+            "query": search_query,
+            "agg_time_period": agg_by,
+            "response_data": censor_keyword_search_output(results),
+        }
     else:
         message = "invalid query"
 

@@ -29,14 +29,14 @@ def mock_verify_input():
 
 
 @pytest.fixture
-def mock_verify_output():
-    with patch("panel_api.app.validate_keyword_search_output") as m:
+def mock_censor():
+    with patch("panel_api.app.censor_keyword_search_output") as m:
         yield m
 
 
-def test_keyword_search_valid_query(client, mock_es_query, mock_verify_output):
+def test_keyword_search_valid_query(client, mock_es_query, mock_censor):
     mock_es_query.return_value = "mock_value"
-    mock_verify_output.return_value = True
+    mock_censor.return_value = "mock_value"
 
     response = client.get(
         "/keyword_search",
@@ -52,7 +52,7 @@ def test_keyword_search_valid_query(client, mock_es_query, mock_verify_output):
         agg_by="week",
         group_by=["voterbase_race", "voterbase_gender"],
     )
-    mock_verify_output.assert_called_once_with("mock_value")
+    mock_censor.assert_called_once_with("mock_value")
 
     assert json.loads(response.data) == {
         "query": "test query",
@@ -73,20 +73,4 @@ def test_keyword_search_invalid_query(client, mock_verify_input):
         "query": "test query",
         "agg_time_period": "week",
         "response_data": "invalid query",
-    }
-
-
-def test_keyword_search_privacy_error(client, mock_es_query, mock_verify_output):
-    mock_es_query.return_value = "mock_value"
-    mock_verify_output.return_value = False
-
-    response = client.get(
-        "/keyword_search",
-        json={"keyword_query": "test query", "aggregate_time_period": "week"},
-    )
-
-    assert json.loads(response.data) == {
-        "query": "test query",
-        "agg_time_period": "week",
-        "response_data": "sample too small to be statistically useful",
     }
