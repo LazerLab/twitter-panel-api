@@ -23,7 +23,7 @@ def keyword_search():
     group_by = request_json.get("cross_sections")
     if validate_keyword_search_input(search_query, agg_by, group_by):
         results = ElasticsearchTwitterPanelSource().query_from_api(
-            search_query=search_query, agg_by=agg_by, group_by=group_by
+            search_query=search_query, agg_by=agg_by, group_by=group_by, fill_zeros=True
         )
         return {
             "query": search_query,
