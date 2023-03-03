@@ -1,33 +1,9 @@
-import panel_api.sources
 import pytest
 from unittest.mock import patch, MagicMock
 import panel_api.sources as sources
 from datetime import datetime
 import pandas as pd
-
-
-def period_equal(period1, period2):
-    if set(period1.keys()) != set(period2.keys()):
-        return False
-    for key in set(period1.keys()):
-        if key != "groups" and period1[key] != period2[key]:
-            return False
-    if "groups" in period1:
-        return (
-            len(period1["groups"]) == len(period2["groups"])
-            and all(
-                [
-                    any([group1 == group2 for group1 in period1["groups"]])
-                    for group2 in period2["groups"]
-                ]
-            )
-            and all(
-                [
-                    any([group1 == group2 for group2 in period2["groups"]])
-                    for group1 in period1["groups"]
-                ]
-            )
-        )
+from .utils import period_equals, list_equals_ignore_order
 
 
 @pytest.fixture
@@ -487,20 +463,7 @@ def test_table_group_by(voter_tweets):
         },
     ]
 
-    assert (len(expected_results)) == len(results)
-
-    assert all(
-        [
-            any([period_equal(expected, result) for result in results])
-            for expected in expected_results
-        ]
-    )
-    assert all(
-        [
-            any([period_equal(result, expected) for expected in expected_results])
-            for result in results
-        ]
-    )
+    assert list_equals_ignore_order(expected_results, results, period_equals)
 
 
 def test_fill_zeros():
@@ -684,15 +647,4 @@ def test_fill_zeros():
     ]
     filled_results = sources.MediaSource().fill_zeros(sparse_results)
 
-    assert all(
-        [
-            any([period_equal(expected, result) for result in filled_results])
-            for expected in expected_results
-        ]
-    )
-    assert all(
-        [
-            any([period_equal(result, expected) for expected in expected_results])
-            for result in filled_results
-        ]
-    )
+    assert list_equals_ignore_order(expected_results, filled_results, period_equals)

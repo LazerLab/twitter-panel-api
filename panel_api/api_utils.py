@@ -1,4 +1,4 @@
-from .config import Config, VALID_AGG_TERMS, DEMOGRAPHIC_FIELDS
+from .config import Config, VALID_AGG_TERMS, Demographic
 import itertools
 from typing import Any, Iterable, Mapping
 
@@ -17,7 +17,7 @@ def int_or_nan(b) -> int:
 
 
 def validate_keyword_search_input(
-    search_query: str, time_agg: str, group_by: Iterable[str] = None
+    search_query: str, agg_by: str, group_by: Iterable[Demographic] = None
 ) -> bool:
     """
     for the keyword_search endpoint, validate the two inputs from the user.
@@ -29,11 +29,11 @@ def validate_keyword_search_input(
         return False
     elif search_query is None:
         return False
-    if time_agg not in VALID_AGG_TERMS:
+    if agg_by not in VALID_AGG_TERMS:
         return False
     if group_by is not None:
         if len([*group_by]) > len(set(group_by)) or any(
-            (d not in DEMOGRAPHIC_FIELDS for d in group_by)
+            (d not in [*Demographic] for d in group_by)
         ):
             return False
     return True
@@ -67,7 +67,7 @@ def validate_keyword_search_output(
                     for count in period[dem].values()
                     if count is not None
                 )
-                for dem in DEMOGRAPHIC_FIELDS
+                for dem in Demographic.values()
             )
         ):
             return False
@@ -97,7 +97,7 @@ def censor_keyword_search_output(
                         period["groups"],
                     )
                 ]
-            for dem in DEMOGRAPHIC_FIELDS:
+            for dem in Demographic.values():
                 period[dem] = {
                     category: count
                     for category, count in period[dem].items()
@@ -112,9 +112,41 @@ def censor_keyword_search_output(
                     if group["count"] < privacy_threshold:
                         group["count"] = None
                     period["groups"].append(group)
-            for dem in DEMOGRAPHIC_FIELDS:
+            for dem in Demographic.values():
                 period[dem] = {
                     category: count if count >= privacy_threshold else None
                     for category, count in period[dem].items()
                 }
     return response_data
+
+
+def parse_query(raw_query):
+    search_query = raw_query.get("keyword_query")
+    agg_by = raw_query.get("aggregate_time_period")
+    group_by = raw_query.get("cross_sections")
+    if group_by is not None:
+        group_by = [*map(demographic_from_name, group_by)]
+
+    parsed_query = {
+        "search_query": search_query,
+        "agg_by": agg_by,
+        "group_by": group_by,
+    }
+
+    if validate_keyword_search_input(**parsed_query):
+        return parsed_query
+    else:
+        return None
+
+
+def demographic_from_name(name) -> Demographic | None:
+    if name in [str(Demographic.RACE), "race"]:
+        return Demographic.RACE
+    elif name in [str(Demographic.GENDER), "gender"]:
+        return Demographic.GENDER
+    elif name in [str(Demographic.AGE), "age"]:
+        return Demographic.AGE
+    elif name in [str(Demographic.STATE), "state"]:
+        return Demographic.STATE
+    else:
+        return None

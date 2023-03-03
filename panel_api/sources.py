@@ -3,8 +3,8 @@ import pandas as pd
 import numpy as np
 import itertools
 
-from .api_utils import int_or_nan
-from .config import Config, AGG_TO_ROUND_KEY, DEMOGRAPHIC_FIELDS, VALUES
+from .api_utils import int_or_nan, demographic_from_name
+from .config import Config, AGG_TO_ROUND_KEY, Demographic, DEMOGRAPHIC_VALUES
 from .es_utils import elastic_query_for_keyword, elastic_query_users
 from .sql_utils import collect_voters
 
@@ -38,7 +38,7 @@ class MediaSource(object):
             .dt.start_time
         )
         # bucket age by decade
-        full_df["vb_age_decade"] = full_df["voterbase_age"].apply(
+        full_df[Demographic.AGE.value] = full_df["voterbase_age"].apply(
             lambda b: str(10 * int(b / 10)) + " - " + str(10 + 10 * int(b / 10))
             if not np.isnan(b)
             else "unknown"
@@ -51,7 +51,7 @@ class MediaSource(object):
             t_dict = {"ts": ts, "n_tweets": len(t)}
             t = t.drop_duplicates(["userid"])
             t_dict["n_tweeters"] = len(t)
-            for i in DEMOGRAPHIC_FIELDS:
+            for i in Demographic:
                 t_dict[i] = t[i].value_counts().to_dict()
             if group_by is not None:
                 count_label = group_by[0]
@@ -81,18 +81,20 @@ class MediaSource(object):
 
         for period in results:
             filled_period = period.copy()
-            for dem in DEMOGRAPHIC_FIELDS:
+            for dem in Demographic:
                 filled_period[dem] = {
                     value: period[dem][value] if value in period[dem] else 0
-                    for value in VALUES[dem]
+                    for value in DEMOGRAPHIC_VALUES[dem]
                 }
             if "groups" in period:
                 group_by = [
-                    field
+                    demographic_from_name(field)
                     for field in period["groups"][0].keys()
                     if not field == "count"
                 ]
-                all_groups = itertools.product(*[VALUES[field] for field in group_by])
+                all_groups = itertools.product(
+                    *[DEMOGRAPHIC_VALUES[field] for field in group_by]
+                )
                 all_groups = [
                     {field: value for field, value in zip(group_by, group)}
                     for group in all_groups

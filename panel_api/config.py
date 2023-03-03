@@ -1,6 +1,7 @@
 from typing import Any, Mapping
 import os
 import json
+from enum import Enum
 
 _default_config = {
     "tweet_schema": "/net/data/twitter-covid/tweet_schema.json",
@@ -41,15 +42,23 @@ class Config(dict):
 VALID_AGG_TERMS = {"day", "week", "month"}
 AGG_TO_ROUND_KEY = {"day": "D", "week": "W", "month": "M"}
 
-DEMOGRAPHIC_FIELDS = [
-    "tsmart_state",
-    "vb_age_decade",
-    "voterbase_gender",
-    "voterbase_race",
-]
 
-VALUES = {
-    "voterbase_race": [
+class Demographic(str, Enum):
+    STATE = "tsmart_state"
+    AGE = "vb_age_decade"
+    GENDER = "voterbase_gender"
+    RACE = "voterbase_race"
+
+    def __str__(self):
+        return self.value
+
+    @staticmethod
+    def values():
+        return [d.value for d in Demographic]
+
+
+DEMOGRAPHIC_VALUES = {
+    Demographic.RACE: [
         "Caucasian",
         "African-American",
         "Hispanic",
@@ -58,7 +67,7 @@ VALUES = {
         "Other",
         "Native American",
     ],
-    "vb_age_decade": [
+    Demographic.AGE: [
         "10 - 20",
         "20 - 30",
         "30 - 40",
@@ -74,8 +83,8 @@ VALUES = {
         "130 - 140",
         "140 - 150",
     ],
-    "voterbase_gender": ["Female", "Male", "Unknown"],
-    "tsmart_state": [
+    Demographic.GENDER: ["Female", "Male", "Unknown"],
+    Demographic.STATE: [
         "CA",
         "TX",
         "NY",

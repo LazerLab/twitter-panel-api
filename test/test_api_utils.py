@@ -1,21 +1,23 @@
 import panel_api.api_utils as api_utils
+from panel_api.config import Demographic
 import pytest
 from unittest.mock import patch
 import copy
+from .utils import list_equals_ignore_order
 
 
 def test_keyword_search_input_valid():
     valid_inputs = [
-        {"search_query": "keyword", "time_agg": "day"},
-        {"search_query": "keyword", "time_agg": "week", "group_by": None},
+        {"search_query": "keyword", "agg_by": "day"},
+        {"search_query": "keyword", "agg_by": "week", "group_by": None},
         {
             "search_query": "key word",
-            "time_agg": "day",
+            "agg_by": "day",
             "group_by": [
-                "voterbase_race",
-                "voterbase_gender",
-                "tsmart_state",
-                "vb_age_decade",
+                Demographic.RACE,
+                Demographic.GENDER,
+                Demographic.STATE,
+                Demographic.AGE,
             ],
         },
     ]
@@ -24,15 +26,82 @@ def test_keyword_search_input_valid():
         assert api_utils.validate_keyword_search_input(**input)
 
 
-def test_keyword_search_input_invalid():
+def test_parse_query_valid():
+    valid_inputs = [
+        {"keyword_query": "keyword", "aggregate_time_period": "day"},
+        {
+            "keyword_query": "keyword",
+            "aggregate_time_period": "week",
+            "cross_sections": None,
+        },
+        {
+            "keyword_query": "key word",
+            "aggregate_time_period": "day",
+            "cross_sections": [
+                "voterbase_race",
+                "voterbase_gender",
+                "tsmart_state",
+                "vb_age_decade",
+            ],
+        },
+    ]
+
+    parsed_queries = [api_utils.parse_query(input) for input in valid_inputs]
+    expected_queries = [
+        {"search_query": "keyword", "agg_by": "day", "group_by": None},
+        {"search_query": "keyword", "agg_by": "week", "group_by": None},
+        {
+            "search_query": "key word",
+            "agg_by": "day",
+            "group_by": [
+                Demographic.RACE,
+                Demographic.GENDER,
+                Demographic.STATE,
+                Demographic.AGE,
+            ],
+        },
+    ]
+
+    for expected, actual in zip(expected_queries, parsed_queries):
+        assert expected["search_query"] == actual["search_query"]
+        assert expected["agg_by"] == actual["agg_by"]
+        if expected["group_by"] is not None:
+            assert set(expected["group_by"]) == set(actual["group_by"])
+        else:
+            assert actual["group_by"] is None
+
+
+def test_parse_query_invalid():
     invalid_inputs = [
-        {"search_query": None, "time_agg": "day"},  # Missing search query
-        {"search_query": "keyword", "time_agg": "dy"},  # Invalid time aggregation
-        {"search_query": "keyword", "time_agg": None},  # Missing time aggregation
+        {"search_query": None, "aggregate_time_period": "day"},  # Missing search query
+        {
+            "search_query": "keyword",
+            "aggregate_time_period": "dy",
+        },  # Invalid time aggregation
+        {
+            "search_query": "keyword",
+            "aggregate_time_period": None,
+        },  # Missing time aggregation
         {
             "search_query": "key word",
             "time_agg": "week",
-            "group_by": ["v_age", "v_gender"],
+            "cross_sections": ["age", "v_gender"],
+        },  # Invalid demographic
+    ]
+
+    for input in invalid_inputs:
+        assert api_utils.parse_query(input) is None
+
+
+def test_keyword_search_input_invalid():
+    invalid_inputs = [
+        {"search_query": None, "agg_by": "day"},  # Missing search query
+        {"search_query": "keyword", "agg_by": "dy"},  # Invalid time aggregation
+        {"search_query": "keyword", "agg_by": None},  # Missing time aggregation
+        {
+            "search_query": "key word",
+            "agg_by": "week",
+            "group_by": [Demographic.AGE, None],
         },  # Invalid demographics
     ]
 
@@ -73,7 +142,6 @@ def test_keyword_search_censor_output(valid_outputs, invalid_outputs):
             copy.deepcopy(output), 10, remove_censored_values=False
         )
         assert api_utils.validate_keyword_search_output(validated_output_removed, 10)
-        print(validated_output_replaced)
         assert api_utils.validate_keyword_search_output(validated_output_replaced, 10)
 
 

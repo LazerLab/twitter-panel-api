@@ -4,6 +4,7 @@ from .config import Config
 from .api_utils import (
     validate_keyword_search_input,
     censor_keyword_search_output,
+    parse_query,
 )
 from .sources import CSVSource, ElasticsearchTwitterPanelSource
 
@@ -18,24 +19,24 @@ def keyword_search():
     """
     message = "unknown error"
     request_json = request.get_json()
-    search_query = request_json.get("keyword_query")
-    agg_by = request_json.get("aggregate_time_period")
-    group_by = request_json.get("cross_sections")
-    if validate_keyword_search_input(search_query, agg_by, group_by):
+    query = parse_query(request_json)
+    if query is not None:
         results = ElasticsearchTwitterPanelSource().query_from_api(
-            search_query=search_query, agg_by=agg_by, group_by=group_by, fill_zeros=True
+            **query, fill_zeros=True
         )
         return {
-            "query": search_query,
-            "agg_time_period": agg_by,
-            "response_data": censor_keyword_search_output(results, remove_censored_values=False),
+            "query": query["search_query"],
+            "agg_time_period": query["agg_by"],
+            "response_data": censor_keyword_search_output(
+                results, remove_censored_values=False
+            ),
         }
     else:
         message = "invalid query"
 
     return {
-        "query": search_query,
-        "agg_time_period": agg_by,
+        "query": request_json["keyword_query"],
+        "agg_time_period": request_json["aggregate_time_period"],
         "response_data": message,
     }
 
