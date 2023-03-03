@@ -6,6 +6,9 @@
 import streamlit as st
 import pandas as pd
 import requests
+import altair as alt
+
+alt.themes.enable("streamlit")
 
 st.title('Twitter Panel Dashboard')
 
@@ -20,6 +23,9 @@ aggregate_time_period = st.selectbox(
 # Create a text element and let the reader know the data is loading.
 data_load_state = st.text('Loading data...')
 
+#------------------------------------
+# Function for getting data
+#------------------------------------
 # get data for this keyword query based on aggregation period
 # st.cache_data allow us to cache data without reloading it each time the page refreshes
 @st.cache_data
@@ -45,17 +51,59 @@ df['ts'] = pd.to_datetime(df['ts'])
 df['date'] = [d.date() for d in df['ts']]
 df = df.set_index(df['ts'])
 
+
+#------------------------------------
+# Function for getting charts
+#------------------------------------
+# Define the base time-series chart.
+def get_chart(data):
+    hover = alt.selection_single(
+        fields=["date"],
+        nearest=True,
+        on="mouseover",
+        empty="none",
+    )
+
+    lines = (
+        alt.Chart(data, title="Number of tweets per " + aggregate_time_period)
+        .mark_line()
+        .encode(
+            alt.X('date', title='Date'),
+            alt.Y('n_tweets', title='Number of tweets')
+        )
+    )
+
+    # Draw points on the line, and highlight based on selection
+    points = lines.transform_filter(hover).mark_circle(size=65)
+
+    # Draw a rule at the location of the selection
+    tooltips = (
+        alt.Chart(data)
+        .mark_rule()
+        .encode(
+            x="date",
+            y="n_tweets",
+            opacity=alt.condition(hover, alt.value(0.3), alt.value(0)),
+            tooltip=[
+                alt.Tooltip("date", title="Date"),
+                alt.Tooltip("n_tweets", title="Number of tweets"),
+            ],
+        )
+        .add_selection(hover)
+    )
+    return (lines + points + tooltips).interactive()
+
 #-----------------------------------
-# Tables
-# present tables of each variable
+# Visualizations
 #-----------------------------------
 
-# raw data 
+# raw data table
 st.dataframe(df)
 
 # time series of tweet number
 # n_tweets
-# https://docs.streamlit.io/library/api-reference/charts/st.altair_chart
+chart = get_chart(df)
+st.altair_chart(chart.interactive(), use_container_width=True)
 
 # age
 st.dataframe(df['vb_age_decade'])
