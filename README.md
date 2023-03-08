@@ -77,3 +77,15 @@ Response:
   ]
 }
 ```
+## Running Streamlit App
+
+Make sure you have isntalled the up-to-date `requirements.txt`.
+
+`cd` to your project path.
+
+
+```
+streamlit run streamlit_app.py
+```
+
+You should be able to see the page by copying the Network URL to your broswer with the same proxy that you run the above command.
