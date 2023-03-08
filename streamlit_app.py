@@ -40,6 +40,14 @@ def get_data_from_api(keyword_query, aggregate_time_period):
     
     return df 
 
+# this function takes a dataframe and a variable string,
+# returns a df of the variable with date as index
+@st.cache_data
+def get_variable_table(df, dem_variable):
+    new_df = pd.DataFrame.from_records(df[dem_variable])
+    new_df.set_index(df['date'], inplace = True)
+    return new_df
+
 # present the data in a table
 df = get_data_from_api(keyword_query, aggregate_time_period)
 
@@ -93,6 +101,37 @@ def get_chart(data):
     )
     return (lines + points + tooltips).interactive()
 
+# can choose between radial or pie chart
+def get_variable_chart(data, variable, type='radial'):
+    data.drop(labels='Unknown', axis=1, inplace=True)
+    stats = data.describe()
+    new_df = pd.DataFrame({variable: stats.columns.values, 'mean': stats.loc['mean']})
+    c = None
+    
+    if type == 'radial':
+        
+        base = alt.Chart(new_df).encode(
+                theta=alt.Theta("mean:Q", stack=True),
+                radius=alt.Radius("mean", scale=alt.Scale(type="sqrt", zero=True, rangeMin=20)),
+                color=variable+":N",
+                )
+        c1 = base.mark_arc(innerRadius=20, stroke="#fff")
+        text = base.mark_text(radiusOffset=15, size=15).encode(text=variable+":N")
+        c = c1 + text
+        
+    elif type == 'pie':
+        
+        base = alt.Chart(new_df).encode(
+            theta=alt.Theta("mean:Q", stack=True), color=alt.Color(variable+":N")
+        )
+
+        c1 = base.mark_arc(outerRadius=120)
+        text = base.mark_text(radius=150, size=15).encode(text=variable+":N")
+        
+        c = c1 + text
+        
+    return c
+
 #-----------------------------------
 # Visualizations
 #-----------------------------------
@@ -106,11 +145,14 @@ chart = get_chart(df)
 st.altair_chart(chart.interactive(), use_container_width=True)
 
 # age
-st.dataframe(df['vb_age_decade'])
+st.dataframe(get_variable_table(df, 'vb_age_decade'))
 
 # gender
-st.dataframe(df['voterbase_gender'])
+gender_df = get_variable_table(df, 'voterbase_gender')
+st.dataframe(gender_df)
 
+c = get_variable_chart(gender_df, 'gender','pie')
+st.altair_chart(c, use_container_width=True)
 
 
 #---------------
