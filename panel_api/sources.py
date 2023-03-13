@@ -18,13 +18,25 @@ class MediaSource(object):
     ***DON'T USE THIS CLASS DIRECTLY***
     """
 
-    def query_from_api(self, **kwargs):
-        # implement this in the subclass.
+    def query_from_api(
+        self, search_query="", agg_by="day", group_by=None, fill_zeros=False, **kwargs
+    ):
         # intended to be used as the function called by the Flask API when it wants data.
+        data = self._query_from_api(search_query=search_query, **kwargs)
+        return MediaSource.aggregate_tabular_data(
+            full_df=data,
+            ts_col_name="created_at",
+            time_agg=agg_by,
+            group_by=group_by,
+            fill_zeros=fill_zeros,
+        )
+
+    def _query_from_api(self, search_query) -> pd.DataFrame:
+        # implement this in the subclass.
         pass
 
+    @staticmethod
     def aggregate_tabular_data(
-        self,
         full_df,
         ts_col_name,
         time_agg,
@@ -65,7 +77,7 @@ class MediaSource(object):
                 )
             results.append(t_dict)
         if fill_zeros:
-            results = self.fill_zeros(results)
+            results = fill_zeros(results)
         return results
 
     @staticmethod
@@ -96,9 +108,7 @@ class MediaSource(object):
 
 
 class ElasticsearchTwitterPanelSource(MediaSource):
-    def query_from_api(
-        self, search_query="", agg_by="day", group_by=None, fill_zeros=False
-    ):
+    def _query_from_api(self, search_query=""):
         """
         query function for the API to pull data out of Elasticsearch based on a search query.
         the data will then be aggregated at the level specified by agg_by.
@@ -131,13 +141,9 @@ class ElasticsearchTwitterPanelSource(MediaSource):
         # need them to both be ints to do the join
         # join results with the user demographics by twitter user ID
         full_df = res_df.merge(users_df, left_on="userid", right_on="twProfileID")
-        full_df = full_df.rename(columns={"vf_source_state": "tsmart_state"})
+        full_df = full_df.rename(columns={"vf_source_state": Demographic.STATE})
 
-        # right now we're aggregating results by day. this can change later.
-
-        return self.aggregate_tabular_data(
-            full_df, "created_at", agg_by, group_by, fill_zeros=fill_zeros
-        )
+        return full_df
 
 
 class CSVSource(MediaSource):
