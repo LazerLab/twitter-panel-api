@@ -4,6 +4,7 @@ import panel_api.sources as sources
 from datetime import datetime
 import pandas as pd
 from .utils import period_equals, list_equals_ignore_order
+from panel_api.config import Demographic
 
 
 @pytest.fixture
@@ -36,202 +37,56 @@ def tweet_data():
 
 @pytest.fixture
 def voter_data():
-    return [
-        {
-            "twProfileID": "0",
-            "vf_source_state": "AL",
-            "voterbase_gender": "Male",
-            "voterbase_age": 20,
-            "voterbase_race": "Caucasian",
-        },
-        {
-            "twProfileID": "1",
-            "vf_source_state": "GA",
-            "voterbase_gender": "Female",
-            "voterbase_age": 21,
-            "voterbase_race": "Uncoded",
-        },
-        {
-            "twProfileID": "2",
-            "vf_source_state": "PA",
-            "voterbase_gender": "Male",
-            "voterbase_age": 30,
-            "voterbase_race": "Caucasian",
-        },
-        {
-            "twProfileID": "3",
-            "vf_source_state": "MA",
-            "voterbase_gender": "Female",
-            "voterbase_age": 55,
-            "voterbase_race": "Asian",
-        },
-        {
-            "twProfileID": "4",
-            "vf_source_state": "MA",
-            "voterbase_gender": "Male",
-            "voterbase_age": 72,
-            "voterbase_race": "African-American",
-        },
-        {
-            "twProfileID": "5",
-            "vf_source_state": "IA",
-            "voterbase_gender": "Female",
-            "voterbase_age": 147,
-            "voterbase_race": "Hispanic",
-        },
-        {
-            "twProfileID": "6",
-            "vf_source_state": "IL",
-            "voterbase_gender": "Male",
-            "voterbase_age": 47,
-            "voterbase_race": "Caucasian",
-        },
-        {
-            "twProfileID": "7",
-            "vf_source_state": "CO",
-            "voterbase_gender": "Female",
-            "voterbase_age": 32,
-            "voterbase_race": "Native American",
-        },
-        {
-            "twProfileID": "8",
-            "vf_source_state": "KS",
-            "voterbase_gender": "Male",
-            "voterbase_age": 43,
-            "voterbase_race": "Uncoded",
-        },
-        {
-            "twProfileID": "9",
-            "vf_source_state": "CT",
-            "voterbase_gender": "Unknown",
-            "voterbase_age": 58,
-            "voterbase_race": "Caucasian",
-        },
-    ]
+    return pd.DataFrame(
+        [
+            ("0", "AL", "Male", 20, "Caucasian"),
+            ("1", "GA", "Female", 21, "Uncoded"),
+            ("2", "PA", "Male", 30, "Caucasian"),
+            ("3", "MA", "Female", 55, "Asian"),
+            ("4", "MA", "Male", 72, "African-American"),
+            ("5", "IA", "Female", 147, "Hispanic"),
+            ("6", "IL", "Male", 47, "Caucasian"),
+            ("7", "CO", "Female", 32, "Native American"),
+            ("8", "KS", "Male", 43, "Uncoded"),
+            ("9", "CT", "Unknown", 58, "Caucasian"),
+        ],
+        columns=[
+            "twProfileID",
+            "vf_source_state",
+            "voterbase_gender",
+            "voterbase_age",
+            "voterbase_race",
+        ],
+    ).to_dict("records")
 
 
 @pytest.fixture
 def voter_tweets():
-    return pd.DataFrame.from_records(
+    return pd.DataFrame(
         [
-            {
-                "created_at": "2023-02-17",
-                "userid": "0",
-                "twProfileID": "0",
-                "tsmart_state": "AL",
-                "voterbase_gender": "Male",
-                "voterbase_age": 20,
-                "voterbase_race": "Caucasian",
-            },
-            {
-                "created_at": "2023-02-17",
-                "userid": "1",
-                "twProfileID": "1",
-                "tsmart_state": "GA",
-                "voterbase_gender": "Female",
-                "voterbase_age": 21,
-                "voterbase_race": "Uncoded",
-            },
-            {
-                "created_at": "2023-02-19",
-                "userid": "2",
-                "twProfileID": "2",
-                "tsmart_state": "PA",
-                "voterbase_gender": "Male",
-                "voterbase_age": 30,
-                "voterbase_race": "Caucasian",
-            },
-            {
-                "created_at": "2023-02-19",
-                "userid": "3",
-                "twProfileID": "3",
-                "tsmart_state": "MA",
-                "voterbase_gender": "Female",
-                "voterbase_age": 55,
-                "voterbase_race": "Asian",
-            },
-            {
-                "created_at": "2023-02-19",
-                "userid": "9",
-                "twProfileID": "9",
-                "tsmart_state": "CT",
-                "voterbase_gender": "Unknown",
-                "voterbase_age": 58,
-                "voterbase_race": "Caucasian",
-            },
-            {
-                "created_at": "2023-02-20",
-                "userid": "4",
-                "twProfileID": "4",
-                "tsmart_state": "MA",
-                "voterbase_gender": "Male",
-                "voterbase_age": 72,
-                "voterbase_race": "African-American",
-            },
-            {
-                "created_at": "2023-02-21",
-                "userid": "5",
-                "twProfileID": "5",
-                "tsmart_state": "IA",
-                "voterbase_gender": "Female",
-                "voterbase_age": 147,
-                "voterbase_race": "Hispanic",
-            },
-            {
-                "created_at": "2023-02-21",
-                "userid": "6",
-                "twProfileID": "6",
-                "tsmart_state": "IL",
-                "voterbase_gender": "Male",
-                "voterbase_age": 47,
-                "voterbase_race": "Caucasian",
-            },
-            {
-                "created_at": "2023-02-21",
-                "userid": "7",
-                "twProfileID": "7",
-                "tsmart_state": "CO",
-                "voterbase_gender": "Female",
-                "voterbase_age": 32,
-                "voterbase_race": "Native American",
-            },
-            {
-                "created_at": "2023-02-21",
-                "userid": "8",
-                "twProfileID": "8",
-                "tsmart_state": "KS",
-                "voterbase_gender": "Male",
-                "voterbase_age": 43,
-                "voterbase_race": "Uncoded",
-            },
-            {
-                "created_at": "2023-02-21",
-                "userid": "9",
-                "twProfileID": "9",
-                "tsmart_state": "CT",
-                "voterbase_gender": "Unknown",
-                "voterbase_age": 58,
-                "voterbase_race": "Caucasian",
-            },
-            {
-                "created_at": "2023-02-21",
-                "userid": "9",
-                "twProfileID": "9",
-                "tsmart_state": "CT",
-                "voterbase_gender": "Unknown",
-                "voterbase_age": 58,
-                "voterbase_race": "Caucasian",
-            },
-            {
-                "created_at": "2023-02-22",
-                "userid": "9",
-                "twProfileID": "9",
-                "tsmart_state": "CT",
-                "voterbase_gender": "Unknown",
-                "voterbase_age": 58,
-                "voterbase_race": "Caucasian",
-            },
-        ]
+            ("2023-02-17", "0", "0", "AL", "Male", 20, "Caucasian"),
+            ("2023-02-17", "1", "1", "GA", "Female", 21, "Uncoded"),
+            ("2023-02-19", "2", "2", "PA", "Male", 30, "Caucasian"),
+            ("2023-02-19", "3", "3", "MA", "Female", 55, "Asian"),
+            ("2023-02-19", "9", "9", "CT", "Unknown", 58, "Caucasian"),
+            ("2023-02-20", "4", "4", "MA", "Male", 72, "African-American"),
+            ("2023-02-21", "5", "5", "IA", "Female", 147, "Hispanic"),
+            ("2023-02-21", "6", "6", "IL", "Male", 47, "Caucasian"),
+            ("2023-02-21", "7", "7", "CO", "Female", 32, "Native American"),
+            ("2023-02-21", "8", "8", "KS", "Male", 43, "Uncoded"),
+            ("2023-02-21", "9", "9", "CT", "Unknown", 58, "Caucasian"),
+            ("2023-02-21", "9", "9", "CT", "Unknown", 58, "Caucasian"),
+            ("2023-02-22", "9", "9", "CT", "Unknown", 58, "Caucasian"),
+        ],
+        columns=[
+            "created_at",
+            "userid",
+            "twProfileID",
+            "tsmart_state",
+            "voterbase_gender",
+            "voterbase_age",
+            "voterbase_race",
+        ],
     )
 
 
@@ -309,19 +164,7 @@ def test_es_query_daily(mock_es_search, mock_voter_db, tweet_data, voter_data):
         },
     ]
 
-    assert (len(expected_results)) == len(results)
-    assert all(
-        [
-            any([expected == result for result in results])
-            for expected in expected_results
-        ]
-    )
-    assert all(
-        [
-            any([result == expected for expected in expected_results])
-            for result in results
-        ]
-    )
+    assert list_equals_ignore_order(expected_results, results, period_equals)
 
 
 def test_es_query_weekly(mock_es_search, mock_voter_db, tweet_data, voter_data):
@@ -369,19 +212,7 @@ def test_es_query_weekly(mock_es_search, mock_voter_db, tweet_data, voter_data):
         },
     ]
 
-    assert (len(expected_results)) == len(results)
-    assert all(
-        [
-            any([expected == result for result in results])
-            for expected in expected_results
-        ]
-    )
-    assert all(
-        [
-            any([result == expected for expected in expected_results])
-            for result in results
-        ]
-    )
+    assert list_equals_ignore_order(expected_results, results, period_equals)
 
 
 def test_table_group_by(voter_tweets):
@@ -497,76 +328,17 @@ def test_fill_zeros():
             "ts": datetime(2023, 2, 13),
             "n_tweets": 5,
             "n_tweeters": 5,
-            "tsmart_state": {
-                "AL": 1,
-                "GA": 1,
-                "PA": 1,
-                "MA": 1,
-                "CT": 1,
-                "CA": 0,
-                "TX": 0,
-                "NY": 0,
-                "FL": 0,
-                "OH": 0,
-                "IL": 0,
-                "MI": 0,
-                "NC": 0,
-                "WA": 0,
-                "MN": 0,
-                "NJ": 0,
-                "IN": 0,
-                "VA": 0,
-                "CO": 0,
-                "WI": 0,
-                "TN": 0,
-                "AZ": 0,
-                "MO": 0,
-                "OR": 0,
-                "MD": 0,
-                "IA": 0,
-                "KY": 0,
-                "LA": 0,
-                "SC": 0,
-                "OK": 0,
-                "KS": 0,
-                "NV": 0,
-                "NE": 0,
-                "AR": 0,
-                "UT": 0,
-                "MS": 0,
-                "DC": 0,
-                "WV": 0,
-                "ME": 0,
-                "NM": 0,
-                "NH": 0,
-                "RI": 0,
-                "ID": 0,
-                "HI": 0,
-                "SD": 0,
-                "MT": 0,
-                "ND": 0,
-                "DE": 0,
-                "AK": 0,
-                "VT": 0,
-                "WY": 0,
-            },
+            "tsmart_state": (
+                pd.Series([1, 1, 1, 1, 1], index=["AL", "GA", "PA", "MA", "CT"])
+                .reindex(Demographic.STATE.values(), fill_value=0)
+                .to_dict()
+            ),
             "voterbase_gender": {"Male": 2, "Female": 2, "Unknown": 1},
-            "vb_age_decade": {
-                "20 - 30": 2,
-                "30 - 40": 1,
-                "50 - 60": 2,
-                "10 - 20": 0,
-                "40 - 50": 0,
-                "60 - 70": 0,
-                "70 - 80": 0,
-                "80 - 90": 0,
-                "90 - 100": 0,
-                "100 - 110": 0,
-                "110 - 120": 0,
-                "120 - 130": 0,
-                "130 - 140": 0,
-                "140 - 150": 0,
-            },
+            "vb_age_decade": (
+                pd.Series([2, 1, 2], index=["20 - 30", "30 - 40", "50 - 60"])
+                .reindex(Demographic.AGE.values(), fill_value=0)
+                .to_dict()
+            ),
             "voterbase_race": {
                 "Caucasian": 3,
                 "Asian": 1,
@@ -576,73 +348,32 @@ def test_fill_zeros():
                 "Other": 0,
                 "Native American": 0,
             },
-            "groups": [
-                {"voterbase_race": "Caucasian", "voterbase_gender": "Male", "count": 2},
-                {"voterbase_race": "Asian", "voterbase_gender": "Female", "count": 1},
-                {"voterbase_race": "Uncoded", "voterbase_gender": "Female", "count": 1},
-                {
-                    "voterbase_race": "Caucasian",
-                    "voterbase_gender": "Unknown",
-                    "count": 1,
-                },
-                {
-                    "voterbase_race": "Caucasian",
-                    "voterbase_gender": "Female",
-                    "count": 0,
-                },
-                {
-                    "voterbase_race": "African-American",
-                    "voterbase_gender": "Female",
-                    "count": 0,
-                },
-                {
-                    "voterbase_race": "African-American",
-                    "voterbase_gender": "Male",
-                    "count": 0,
-                },
-                {
-                    "voterbase_race": "African-American",
-                    "voterbase_gender": "Unknown",
-                    "count": 0,
-                },
-                {
-                    "voterbase_race": "Hispanic",
-                    "voterbase_gender": "Female",
-                    "count": 0,
-                },
-                {"voterbase_race": "Hispanic", "voterbase_gender": "Male", "count": 0},
-                {
-                    "voterbase_race": "Hispanic",
-                    "voterbase_gender": "Unknown",
-                    "count": 0,
-                },
-                {"voterbase_race": "Uncoded", "voterbase_gender": "Male", "count": 0},
-                {
-                    "voterbase_race": "Uncoded",
-                    "voterbase_gender": "Unknown",
-                    "count": 0,
-                },
-                {"voterbase_race": "Asian", "voterbase_gender": "Male", "count": 0},
-                {"voterbase_race": "Asian", "voterbase_gender": "Unknown", "count": 0},
-                {"voterbase_race": "Other", "voterbase_gender": "Female", "count": 0},
-                {"voterbase_race": "Other", "voterbase_gender": "Male", "count": 0},
-                {"voterbase_race": "Other", "voterbase_gender": "Unknown", "count": 0},
-                {
-                    "voterbase_race": "Native American",
-                    "voterbase_gender": "Female",
-                    "count": 0,
-                },
-                {
-                    "voterbase_race": "Native American",
-                    "voterbase_gender": "Male",
-                    "count": 0,
-                },
-                {
-                    "voterbase_race": "Native American",
-                    "voterbase_gender": "Unknown",
-                    "count": 0,
-                },
-            ],
+            "groups": pd.DataFrame(
+                [
+                    ("Caucasian", "Male", 2),
+                    ("Asian", "Female", 1),
+                    ("Uncoded", "Female", 1),
+                    ("Caucasian", "Unknown", 1),
+                    ("Caucasian", "Female", 0),
+                    ("African-American", "Female", 0),
+                    ("African-American", "Male", 0),
+                    ("African-American", "Unknown", 0),
+                    ("Hispanic", "Female", 0),
+                    ("Hispanic", "Male", 0),
+                    ("Hispanic", "Unknown", 0),
+                    ("Uncoded", "Male", 0),
+                    ("Uncoded", "Unknown", 0),
+                    ("Asian", "Male", 0),
+                    ("Asian", "Unknown", 0),
+                    ("Other", "Female", 0),
+                    ("Other", "Male", 0),
+                    ("Other", "Unknown", 0),
+                    ("Native American", "Female", 0),
+                    ("Native American", "Male", 0),
+                    ("Native American", "Unknown", 0),
+                ],
+                columns=[Demographic.RACE, Demographic.GENDER, "count"],
+            ).to_dict("records"),
         },
     ]
     filled_results = sources.MediaSource().fill_zeros(sparse_results)
