@@ -52,10 +52,6 @@ class Demographic(str, Enum):
     def __str__(self):
         return self.value
 
-    @staticmethod
-    def values():
-        return [d.value for d in Demographic]
-
 
 DEMOGRAPHIC_VALUES = {
     Demographic.RACE: [

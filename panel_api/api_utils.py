@@ -67,7 +67,7 @@ def validate_keyword_search_output(
                     for count in period[dem].values()
                     if count is not None
                 )
-                for dem in Demographic.values()
+                for dem in [*Demographic]
             )
         ):
             return False
@@ -97,7 +97,7 @@ def censor_keyword_search_output(
                         period["groups"],
                     )
                 ]
-            for dem in Demographic.values():
+            for dem in [*Demographic]:
                 period[dem] = {
                     category: count
                     for category, count in period[dem].items()
@@ -112,7 +112,7 @@ def censor_keyword_search_output(
                     if group["count"] < privacy_threshold:
                         group["count"] = None
                     period["groups"].append(group)
-            for dem in Demographic.values():
+            for dem in [*Demographic]:
                 period[dem] = {
                     category: count if count >= privacy_threshold else None
                     for category, count in period[dem].items()
