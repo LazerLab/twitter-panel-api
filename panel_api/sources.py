@@ -68,15 +68,9 @@ class MediaSource(object):
             results = self.fill_zeros(results)
         return results
 
-    def fill_zeros(self, results):
+    @staticmethod
+    def fill_zeros(results):
         filled_results = []
-
-        def nested_put(d, *keys, value):
-            for key in keys[:-1]:
-                if key not in d:
-                    d[key] = {}
-                d = d[key]
-            d[keys[-1]] = value
 
         for period in results:
             filled_period = period.copy()
@@ -86,27 +80,17 @@ class MediaSource(object):
                     for value in DEMOGRAPHIC_VALUES[dem]
                 }
             if "groups" in period:
-                group_by = [
-                    demographic_from_name(field)
-                    for field in period["groups"][0].keys()
-                    if not field == "count"
-                ]
+                groups = pd.DataFrame.from_records(period["groups"])
+                group_by = [col for col in groups.columns if not col == "count"]
                 all_groups = itertools.product(
                     *[DEMOGRAPHIC_VALUES[field] for field in group_by]
                 )
-                all_groups = [
-                    {field: value for field, value in zip(group_by, group)}
-                    for group in all_groups
-                ]
-                group_tree = {}
-                for group in all_groups:
-                    group["count"] = 0
-                    group_values = [group[field] for field in group_by]
-                    nested_put(group_tree, *group_values, value=group)
-                for group in period["groups"]:
-                    group_values = [group[field] for field in group_by]
-                    nested_put(group_tree, *group_values, "count", value=group["count"])
-                filled_period["groups"] = all_groups
+                groups = (
+                    groups.set_index(group_by)
+                    .reindex(all_groups, fill_value=0)
+                    .reset_index()
+                )
+                filled_period["groups"] = groups.to_dict("records")
             filled_results.append(filled_period)
         return filled_results
 
