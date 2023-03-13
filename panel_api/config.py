@@ -52,6 +52,9 @@ class Demographic(str, Enum):
     def __str__(self):
         return self.value
 
+    def values(self):
+        return DEMOGRAPHIC_VALUES[self]
+
 
 DEMOGRAPHIC_VALUES = {
     Demographic.RACE: [

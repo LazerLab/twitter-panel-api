@@ -4,7 +4,7 @@ import numpy as np
 import itertools
 
 from .api_utils import int_or_nan, demographic_from_name
-from .config import Config, AGG_TO_ROUND_KEY, Demographic, DEMOGRAPHIC_VALUES
+from .config import Config, AGG_TO_ROUND_KEY, Demographic
 from .es_utils import elastic_query_for_keyword, elastic_query_users
 from .sql_utils import collect_voters
 
@@ -89,13 +89,13 @@ class MediaSource(object):
             for dem in Demographic:
                 filled_period[dem] = {
                     value: period[dem][value] if value in period[dem] else 0
-                    for value in DEMOGRAPHIC_VALUES[dem]
+                    for value in Demographic.values(dem)
                 }
             if "groups" in period:
                 groups = pd.DataFrame.from_records(period["groups"])
                 group_by = [col for col in groups.columns if not col == "count"]
                 all_groups = itertools.product(
-                    *[DEMOGRAPHIC_VALUES[field] for field in group_by]
+                    *[Demographic.values(field) for field in group_by]
                 )
                 groups = (
                     groups.set_index(group_by)
