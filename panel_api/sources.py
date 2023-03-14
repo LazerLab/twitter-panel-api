@@ -36,6 +36,7 @@ class MediaSource(object):
         Keyword search response
         """
         data = self._query_from_api(search_query=search_query, **kwargs)
+        data = MediaSource.add_demographics(data, id_column="userid")
         return MediaSource.aggregate_tabular_data(
             full_df=data,
             ts_col_name="created_at",
@@ -51,7 +52,6 @@ class MediaSource(object):
         The resulting DataFrame must contain the following columns:
         "created_at": The time of the tweet
         "userid": The Twitter user ID of the person who tweeted
-        All values of the `Demographic` enum: The demographic information of the user
         """
         pass
 
@@ -102,6 +102,15 @@ class MediaSource(object):
 
     @staticmethod
     def fill_zeros(results):
+        """
+        Add explicit zeros to a data response.
+
+        Parameters:
+        results: Data response
+
+        Returns:
+        Equivalent data response with explicit zeros
+        """
         filled_results = []
 
         for period in results:
@@ -126,6 +135,28 @@ class MediaSource(object):
             filled_results.append(filled_period)
         return filled_results
 
+    @staticmethod
+    def add_demographics(tweet_data: pd.DataFrame, id_column):
+        """
+        Merge tweet data with the demographic information
+        """
+        # grab all the users who tweeted
+        users = collect_voters(set(tweet_data[id_column]))
+        users_df = pd.DataFrame(users)
+
+        # coerce user IDs
+        users_df["twProfileID"] = users_df["twProfileID"].apply(lambda b: int_or_nan(b))
+        # need them to both be ints to do the join
+        # join results with the user demographics by twitter user ID
+        full_df = tweet_data.merge(users_df, left_on=id_column, right_on="twProfileID")
+        full_df = full_df.rename(
+            columns={
+                "vf_source_state": Demographic.STATE,
+                "voterbase_age": Demographic.AGE,
+            }
+        )
+        return full_df
+
 
 class ElasticsearchTwitterPanelSource(MediaSource):
     def _query_from_api(self, search_query=""):
@@ -144,31 +175,14 @@ class ElasticsearchTwitterPanelSource(MediaSource):
             results.append(hit.to_dict())
 
         if len(results) == 0:
-            results = []
-            return results
+            return pd.DataFrame(columns=["created_at", "userid"])
         else:
             res_df = pd.DataFrame(results)
             # otherwise we make a dataframe
 
         res_df["userid"] = res_df["user"].apply(lambda u: int_or_nan(u["id"]))
 
-        # grab all the users who tweeted
-        users = collect_voters(set(res_df["userid"]))
-        users_df = pd.DataFrame(users)
-
-        # coerce user IDs
-        users_df["twProfileID"] = users_df["twProfileID"].apply(lambda b: int_or_nan(b))
-        # need them to both be ints to do the join
-        # join results with the user demographics by twitter user ID
-        full_df = res_df.merge(users_df, left_on="userid", right_on="twProfileID")
-        full_df = full_df.rename(
-            columns={
-                "vf_source_state": Demographic.STATE,
-                "voterbase_age": Demographic.AGE,
-            }
-        )
-
-        return full_df
+        return res_df
 
 
 class CSVSource(MediaSource):
