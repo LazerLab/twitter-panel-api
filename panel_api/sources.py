@@ -19,9 +19,22 @@ class MediaSource(object):
     """
 
     def query_from_api(
-        self, search_query="", agg_by="day", group_by=None, fill_zeros=False, **kwargs
+        self, search_query, agg_by="day", group_by=None, fill_zeros=False, **kwargs
     ):
-        # intended to be used as the function called by the Flask API when it wants data.
+        """
+        Create a data response for a keyword search query on a particular MediaSource.
+        This is intended to be used directly by the Flask API when it wants data.
+
+        Parameters:
+        search_query: The keyword to search for
+        agg_by: Time period aggregation ("day"/"week")
+        group_by: Cross-sectional demographics to record (Ex. [Demographic.RACE, Demographic.GENDER])
+        fill_zeros: Return explicit zeros in the response (Default: False)
+        **kwargs: Source-specific kwargs
+
+        Returns:
+        Keyword search response
+        """
         data = self._query_from_api(search_query=search_query, **kwargs)
         return MediaSource.aggregate_tabular_data(
             full_df=data,
@@ -32,7 +45,14 @@ class MediaSource(object):
         )
 
     def _query_from_api(self, search_query) -> pd.DataFrame:
-        # implement this in the subclass.
+        """
+        Collect keyword search data from this source. Must be implemented by subclasses.
+
+        The resulting DataFrame must contain the following columns:
+        "created_at": The time of the tweet
+        "userid": The Twitter user ID of the person who tweeted
+        All values of the `Demographic` enum: The demographic information of the user
+        """
         pass
 
     @staticmethod
@@ -50,7 +70,7 @@ class MediaSource(object):
             .dt.start_time
         )
         # bucket age by decade
-        full_df[Demographic.AGE.value] = full_df["voterbase_age"].apply(
+        full_df[Demographic.AGE] = full_df[Demographic.AGE].apply(
             lambda b: str(10 * int(b / 10)) + " - " + str(10 + 10 * int(b / 10))
             if not np.isnan(b)
             else "unknown"
@@ -141,7 +161,12 @@ class ElasticsearchTwitterPanelSource(MediaSource):
         # need them to both be ints to do the join
         # join results with the user demographics by twitter user ID
         full_df = res_df.merge(users_df, left_on="userid", right_on="twProfileID")
-        full_df = full_df.rename(columns={"vf_source_state": Demographic.STATE})
+        full_df = full_df.rename(
+            columns={
+                "vf_source_state": Demographic.STATE,
+                "voterbase_age": Demographic.AGE,
+            }
+        )
 
         return full_df
 

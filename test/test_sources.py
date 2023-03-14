@@ -82,10 +82,10 @@ def voter_tweets():
             "created_at",
             "userid",
             "twProfileID",
-            "tsmart_state",
-            "voterbase_gender",
-            "voterbase_age",
-            "voterbase_race",
+            Demographic.STATE,
+            Demographic.GENDER,
+            Demographic.AGE,
+            Demographic.RACE,
         ],
     )
 
