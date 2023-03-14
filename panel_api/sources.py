@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import itertools
 
+import panel_api.api_utils as api_utils
 from .api_utils import int_or_nan, demographic_from_name
 from .config import Config, AGG_TO_ROUND_KEY, Demographic
 from .es_utils import elastic_query_for_keyword, elastic_query_users
@@ -97,43 +98,8 @@ class MediaSource(object):
                 )
             results.append(t_dict)
         if fill_zeros:
-            results = fill_zeros(results)
+            results = api_utils.fill_zeros(results)
         return results
-
-    @staticmethod
-    def fill_zeros(results):
-        """
-        Add explicit zeros to a data response.
-
-        Parameters:
-        results: Data response
-
-        Returns:
-        Equivalent data response with explicit zeros
-        """
-        filled_results = []
-
-        for period in results:
-            filled_period = period.copy()
-            for dem in Demographic:
-                filled_period[dem] = {
-                    value: period[dem][value] if value in period[dem] else 0
-                    for value in Demographic.values(dem)
-                }
-            if "groups" in period:
-                groups = pd.DataFrame.from_records(period["groups"])
-                group_by = [col for col in groups.columns if not col == "count"]
-                all_groups = itertools.product(
-                    *[Demographic.values(field) for field in group_by]
-                )
-                groups = (
-                    groups.set_index(group_by)
-                    .reindex(all_groups, fill_value=0)
-                    .reset_index()
-                )
-                filled_period["groups"] = groups.to_dict("records")
-            filled_results.append(filled_period)
-        return filled_results
 
     @staticmethod
     def add_demographics(tweet_data: pd.DataFrame, id_column):

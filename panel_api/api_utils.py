@@ -1,6 +1,8 @@
 from .config import Config, VALID_AGG_TERMS, Demographic
 import itertools
 from typing import Any, Iterable, Mapping
+import pandas as pd
+from .data_utils import fill_record_counts, fill_value_counts
 
 
 def int_or_nan(b) -> int:
@@ -150,3 +152,35 @@ def demographic_from_name(name) -> Demographic | None:
         return Demographic.STATE
     else:
         return None
+
+
+def fill_zeros(results):
+    """
+    Add explicit zeros to a data response.
+
+    Parameters:
+    results: Data response
+
+    Returns:
+    Equivalent data response with explicit zeros
+    """
+    filled_results = []
+
+    for period in results:
+        filled_period = period.copy()
+        for dem in Demographic:
+            filled_period[dem] = fill_value_counts(
+                filled_period[dem], all_values=Demographic.values(dem)
+            )
+        if "groups" in period:
+            group_by = [
+                field
+                for field in filled_period["groups"][0].keys()
+                if not field == "count"
+            ]
+            filled_period["groups"] = fill_record_counts(
+                filled_period["groups"],
+                values_mapping={dem: Demographic.values(dem) for dem in group_by},
+            )
+        filled_results.append(filled_period)
+    return filled_results
