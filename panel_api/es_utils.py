@@ -22,7 +22,7 @@ def elastic_query_for_keyword(keyword: str):
     Given a string (keyword), return all tweets in the tweets index that contain that string.
     Return as raw ES output.
     """
-    es_conf = Config()['elasticsearch']
+    es_conf = Config()["elasticsearch"]
     es = Elasticsearch(
         **es_conf,
         scheme="https",
@@ -30,7 +30,7 @@ def elastic_query_for_keyword(keyword: str):
         ssl_show_warn=False,
         connection_class=RequestsHttpConnection,
     )
-    s = Search(using=es, index="tweets*").query("match", full_text=keyword)
+    s = Search(using=es, index="tweets").query("match", full_text=keyword)
     res = s.scan()
     return res
 
