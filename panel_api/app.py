@@ -5,7 +5,7 @@ from .api_utils import (
     censor_keyword_search_output,
     KeywordQuery,
 )
-from .sources import CSVSource, ElasticsearchTwitterPanelSource
+from .sources import CSVSource, ElasticsearchTwitterPanelSource, CensoredSource
 
 app = Flask(__name__)
 app.config.update(Config()["flask"])
@@ -20,15 +20,12 @@ def keyword_search():
     request_json = request.get_json()
     query = KeywordQuery.from_raw_query(request_json)
     if query is not None:
-        results = ElasticsearchTwitterPanelSource().query_from_api(
-            query, fill_zeros=True
+        source = CensoredSource(
+            ElasticsearchTwitterPanelSource(),
+            privacy_threshold=Config()["user_count_privacy_threshold"],
         )
-        return {
-            "query": request_json,
-            "response_data": censor_keyword_search_output(
-                results, remove_censored_values=False
-            ),
-        }
+        results = source.query_from_api(query, fill_zeros=True)
+        return {"query": request_json, "response_data": results}
     else:
         message = "invalid query"
 

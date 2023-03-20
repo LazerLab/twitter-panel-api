@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
+from typing import Iterable, Mapping, Any
 
 import panel_api.api_utils as api_utils
-from .api_utils import int_or_nan, KeywordQuery
+from .api_utils import int_or_nan, KeywordQuery, censor_keyword_search_output
 from .config import Config, AGG_TO_ROUND_KEY, Demographic
 from .es_utils import elastic_query_for_keyword
 from .sql_utils import collect_voters
@@ -159,3 +160,20 @@ class CSVSource(MediaSource):
         )
         full_df = df[df["to_take"]]
         return self.aggregate_tabular_data(full_df, "created_at", agg_by)
+
+
+class CensoredSource(MediaSource):
+    """
+    Wrapper for other MediaSource classes that censors privacy-violating output from submitted queries.
+    """
+
+    def __init__(self, source: MediaSource, privacy_threshold: int = 10):
+        self.source = source
+        self.privacy_threshold = privacy_threshold
+
+    def query_from_api(self, query: KeywordQuery, fill_zeros=False, **kwargs):
+        return censor_keyword_search_output(
+            self.source.query_from_api(query, fill_zeros, **kwargs),
+            self.privacy_threshold,
+            remove_censored_values=not fill_zeros,
+        )
