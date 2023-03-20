@@ -1,10 +1,12 @@
-import pytest
-from unittest.mock import patch
-from panel_api.app import app as app_singleton
 import json
-from panel_api.config import Demographic
-from panel_api.api_utils import KeywordQuery
 from datetime import date
+from unittest.mock import patch
+
+import pytest
+
+from panel_api.api_utils import KeywordQuery
+from panel_api.app import app as app_singleton
+from panel_api.config import Demographic
 
 
 @pytest.fixture

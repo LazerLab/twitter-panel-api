@@ -1,6 +1,10 @@
-import pandas as pd
-from typing import Mapping
+"""
+Module for data-processing utilities.
+"""
 import itertools
+from typing import Mapping
+
+import pandas as pd
 
 
 def fill_value_counts(counts, all_values, fill_value=0):
@@ -18,15 +22,14 @@ def fill_value_counts(counts, all_values, fill_value=0):
     return pd.Series(counts).reindex(all_values, fill_value=fill_value).to_dict()
 
 
-def fill_record_counts(
-    records, values_mapping: Mapping, count_label="count", fill_value=0
-):
+def fill_record_counts(records, values_mapping: Mapping, fill_value=0):
     """
     Fill missing values in a records-formatted list of dicts with a single value.
 
     Parameters:
     records: Count records
-    values_mapping: List of all possible values per key. The keys of this dict should match the keys in the records
+    values_mapping: List of all possible values per key. The keys of this dict should match
+        the keys in the records
     count_label: The key of the count field in the records
     fill_value: What to fill missing values with
 
@@ -35,11 +38,11 @@ def fill_record_counts(
     """
     index_columns = list(values_mapping.keys())
     all_indices = itertools.product(*[values_mapping[value] for value in index_columns])
-    df = (
+    data = (
         pd.DataFrame.from_records(records)
         .set_index(index_columns)
         .reindex(all_indices, fill_value=fill_value)
         .reset_index()
         .to_dict("records")
     )
-    return df
+    return data

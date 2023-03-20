@@ -1,12 +1,14 @@
-import panel_api.api_utils as api_utils
+import copy
+from datetime import datetime
+
+import pandas as pd
+import pytest
+
+from panel_api import api_utils
 from panel_api.api_utils import KeywordQuery
 from panel_api.config import Demographic
-import pytest
-from unittest.mock import patch
-import copy
+
 from .utils import list_equals_ignore_order, period_equals
-from datetime import datetime
-import pandas as pd
 
 
 def test_parse_query_valid():

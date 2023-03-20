@@ -1,12 +1,14 @@
-from .config import Config, VALID_AGG_TERMS, Demographic
-import itertools
+"""
+Module for API-specific utilities.
+"""
+from datetime import date, datetime, timedelta
 from typing import Any, Iterable, Mapping, Optional, Tuple
-from datetime import datetime, date, timedelta
-import pandas as pd
+
+from .config import VALID_AGG_TERMS, Config, Demographic
 from .data_utils import fill_record_counts, fill_value_counts
 
 
-def int_or_nan(b) -> int:
+def int_or_nan(num) -> int:
     """
     hopefully b is a string that converts nicely to an int.
     if it is not, we return 0.
@@ -14,17 +16,21 @@ def int_or_nan(b) -> int:
     i'm just using this for user IDs (need a better solution for prod)
     """
     try:
-        return int(b)
-    except:
+        return int(num)
+    except ValueError:
         return 0
 
 
 class KeywordQuery:
+    """
+    Represents a keyword search query.
+    """
+
     def __init__(
         self,
         keyword: str,
         time_aggregation: str,
-        cross_sections: Iterable[Demographic] = [],
+        cross_sections: Iterable[Demographic] = None,
         time_range: Tuple[Optional[date], Optional[date]] = (None, None),
     ):
         self.keyword = keyword
@@ -36,6 +42,9 @@ class KeywordQuery:
 
     @staticmethod
     def from_raw_query(raw_query: Mapping):
+        """
+        Try to create a KeywordQuery from an API query dict. Returns None on failure.
+        """
         search_query = raw_query.get("keyword_query")
         agg_by = raw_query.get("aggregate_time_period")
         group_by = raw_query.get("cross_sections")
@@ -69,16 +78,15 @@ class KeywordQuery:
             return False
         if self.time_aggregation not in VALID_AGG_TERMS:
             return False
-        if self.cross_sections:
-            if len(self.cross_sections) > Config()["cross_sections_limit"]:
-                return False
-            if len(self.cross_sections) > len(set(self.cross_sections)) or any(
-                (d not in [*Demographic] for d in self.cross_sections)
-            ):
-                return False
-        if len(self.time_range) != 2:
+        if self.cross_sections and (
+            len(self.cross_sections) > Config()["cross_sections_limit"]
+            or len(self.cross_sections) > len(set(self.cross_sections))
+            or any((d not in [*Demographic] for d in self.cross_sections))
+        ):
             return False
-        if all([time is not None for time in self.time_range]):
+        if len(self.time_range) != 2 or all(
+            time is not None for time in self.time_range
+        ):
             if self.time_range[1] - self.time_range[0] < timedelta(0):
                 return False
         return True
@@ -86,8 +94,7 @@ class KeywordQuery:
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, KeywordQuery):
             return self.__dict__ == __o.__dict__
-        else:
-            return False
+        return False
 
     def __ne__(self, __o: object) -> bool:
         return not self.__eq__(__o)
@@ -175,16 +182,18 @@ def censor_keyword_search_output(
 
 
 def demographic_from_name(name) -> Demographic | None:
+    """
+    Translate human-readable names for demographics to the Demographic enumeration.
+    """
     if name in [str(Demographic.RACE), "race"]:
         return Demographic.RACE
-    elif name in [str(Demographic.GENDER), "gender"]:
+    if name in [str(Demographic.GENDER), "gender"]:
         return Demographic.GENDER
-    elif name in [str(Demographic.AGE), "age"]:
+    if name in [str(Demographic.AGE), "age"]:
         return Demographic.AGE
-    elif name in [str(Demographic.STATE), "state"]:
+    if name in [str(Demographic.STATE), "state"]:
         return Demographic.STATE
-    else:
-        return None
+    return None
 
 
 def fill_zeros(results):

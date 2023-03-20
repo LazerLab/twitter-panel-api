@@ -1,7 +1,10 @@
-from typing import Any, Mapping
-import os
+"""
+Define config values and constants for the API.
+"""
 import json
+import os
 from enum import Enum
+from typing import Any, Mapping
 
 _default_config = {
     "tweet_schema": "/net/data/twitter-covid/tweet_schema.json",
@@ -26,6 +29,10 @@ _default_config = {
 
 
 class Config(dict):
+    """
+    Configuration for the API.
+    """
+
     def __init__(self, *, path=None, env=True, fallback=True):
         if fallback:
             self.update(_default_config)
@@ -36,8 +43,12 @@ class Config(dict):
         if path and os.path.exists(path):
             self.update(Config.parse_file(path))
 
+    @staticmethod
     def parse_file(path: str) -> Mapping[str, Any]:
-        return json.load(open(path))
+        """
+        Parse a config JSON file into a Python dict.
+        """
+        return json.load(open(path, encoding="utf-8"))
 
 
 VALID_AGG_TERMS = {"day", "week", "month"}
@@ -45,6 +56,10 @@ AGG_TO_ROUND_KEY = {"day": "D", "week": "W", "month": "M"}
 
 
 class Demographic(str, Enum):
+    """
+    Demographics that can be queried in the API.
+    """
+
     STATE = "tsmart_state"
     AGE = "vb_age_decade"
     GENDER = "voterbase_gender"
@@ -54,6 +69,9 @@ class Demographic(str, Enum):
         return self.value
 
     def values(self):
+        """
+        Return a list of all possible API values for a demographic.
+        """
         return DEMOGRAPHIC_VALUES[self]
 
 

@@ -1,6 +1,11 @@
-import psycopg2
-from .config import Config
+"""
+Module for interacting with a PostgreSQL data backend.
+"""
 from typing import Any, Iterable, Mapping
+
+import psycopg2
+
+from .config import Config
 
 
 def collect_voters(twitter_ids: Iterable[str]) -> Iterable[Mapping[str, Any]]:

@@ -1,11 +1,11 @@
+"""
+Main Flask application endpoints file. Creates the Flask app on import.
+"""
 from flask import Flask, request
 
+from .api_utils import KeywordQuery
 from .config import Config
-from .api_utils import (
-    censor_keyword_search_output,
-    KeywordQuery,
-)
-from .sources import CSVSource, ElasticsearchTwitterPanelSource, CensoredSource
+from .sources import CensoredSource, ElasticsearchTwitterPanelSource
 
 app = Flask(__name__)
 app.config.update(Config()["flask"])
@@ -26,9 +26,8 @@ def keyword_search():
         )
         results = source.query_from_api(query, fill_zeros=True)
         return {"query": request_json, "response_data": results}
-    else:
-        message = "invalid query"
 
+    message = "invalid query"
     return {
         "query": request_json,
         "response_data": message,

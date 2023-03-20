@@ -1,11 +1,14 @@
+from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
 import pytest
-from unittest.mock import patch, MagicMock
+
 import panel_api.sources as sources
 from panel_api.api_utils import KeywordQuery
-from datetime import datetime
-import pandas as pd
-from .utils import period_equals, list_equals_ignore_order
 from panel_api.config import Demographic
+
+from .utils import list_equals_ignore_order, period_equals
 
 
 @pytest.fixture
@@ -217,7 +220,7 @@ def test_es_query_weekly(mock_es_search, mock_voter_db, tweet_data, voter_data):
 
 
 def test_table_group_by(voter_tweets):
-    results = sources.MediaSource().aggregate_tabular_data(
+    results = sources.MediaSource.aggregate_tabular_data(
         voter_tweets,
         "created_at",
         time_agg="week",
