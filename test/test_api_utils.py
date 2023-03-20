@@ -21,9 +21,7 @@ def test_parse_query_valid():
             "aggregate_time_period": "day",
             "cross_sections": [
                 "voterbase_race",
-                "voterbase_gender",
                 "tsmart_state",
-                "vb_age_decade",
             ],
         },
         {
@@ -53,9 +51,7 @@ def test_parse_query_valid():
             "day",
             cross_sections=[
                 Demographic.RACE,
-                Demographic.GENDER,
                 Demographic.STATE,
-                Demographic.AGE,
             ],
         ),
     ]

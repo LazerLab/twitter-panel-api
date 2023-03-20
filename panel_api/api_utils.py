@@ -70,7 +70,9 @@ class KeywordQuery:
         if self.time_aggregation not in VALID_AGG_TERMS:
             return False
         if self.cross_sections:
-            if len([*self.cross_sections]) > len(set(self.cross_sections)) or any(
+            if len(self.cross_sections) > Config()["cross_sections_limit"]:
+                return False
+            if len(self.cross_sections) > len(set(self.cross_sections)) or any(
                 (d not in [*Demographic] for d in self.cross_sections)
             ):
                 return False

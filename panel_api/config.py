@@ -10,6 +10,7 @@ _default_config = {
     "csv_data_loc": "/home/asmithh/god_all_tweets.tsv",
     "csv_text_col": "text",
     "user_count_privacy_threshold": 10,
+    "cross_sections_limit": 2,
     "flask": {"SECRET_KEY": "flask_secret_key"},
     "elasticsearch": {
         "hosts": [{"host": "localhost", "port": 9200}],
