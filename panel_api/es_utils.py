@@ -1,3 +1,4 @@
+from datetime import date
 import elasticsearch
 from elasticsearch import RequestsHttpConnection
 from elasticsearch import Elasticsearch
@@ -20,7 +21,9 @@ from typing import Optional, Tuple
 from .config import Config
 
 
-def elastic_query_for_keyword(keyword: str, between: Optional[Tuple[str, str]] = None):
+def elastic_query_for_keyword(
+    keyword: str, before: Optional[date] = None, after: Optional[date] = None
+):
     """
     Given a string (keyword), return all tweets in the tweets index that contain that string.
     Return as raw ES output.
@@ -34,8 +37,13 @@ def elastic_query_for_keyword(keyword: str, between: Optional[Tuple[str, str]] =
         connection_class=RequestsHttpConnection,
     )
     s = Search(using=es, index="tweets").query(Match(full_text=keyword))
-    if between is not None:
-        s = s.query(Range(created_at={"gte": between[0], "lte": between[1]}))
+    range_query = {}
+    range_query.update(
+        {"lte": before.strftime("%Y-%m-%d")} if before is not None else {}
+    )
+    range_query.update({"gte": after.strftime("%Y-%m-%d")} if after is not None else {})
+    if len(range_query > 0):
+        s = s.query(Range(created_at=range_query))
     res = s.scan()
     return res
 
