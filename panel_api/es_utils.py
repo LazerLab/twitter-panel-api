@@ -13,11 +13,14 @@ from elasticsearch_dsl import (
     Boolean,
 )
 from elasticsearch_dsl.connections import connections
+from elasticsearch_dsl.query import Match, Range
+
+from typing import Optional, Tuple
 
 from .config import Config
 
 
-def elastic_query_for_keyword(keyword: str):
+def elastic_query_for_keyword(keyword: str, between: Optional[Tuple[str, str]] = None):
     """
     Given a string (keyword), return all tweets in the tweets index that contain that string.
     Return as raw ES output.
@@ -30,7 +33,9 @@ def elastic_query_for_keyword(keyword: str):
         ssl_show_warn=False,
         connection_class=RequestsHttpConnection,
     )
-    s = Search(using=es, index="tweets").query("match", full_text=keyword)
+    s = Search(using=es, index="tweets").query(Match(full_text=keyword))
+    if between is not None:
+        s = s.query(Range(created_at={"gte": between[0], "lte": between[1]}))
     res = s.scan()
     return res
 
