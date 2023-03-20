@@ -4,6 +4,7 @@ from panel_api.app import app as app_singleton
 import json
 from panel_api.config import Demographic
 from panel_api.api_utils import KeywordQuery
+from datetime import date
 
 
 @pytest.fixture
@@ -30,6 +31,8 @@ def test_keyword_search_valid_query(client, mock_censor):
         "keyword_query": "test query",
         "aggregate_time_period": "week",
         "cross_sections": ["voterbase_race", "voterbase_gender"],
+        "after": "2020-10-01",
+        "before": "2020-12-31",
     }
     response = client.get(
         "/keyword_search",
@@ -43,7 +46,10 @@ def test_keyword_search_valid_query(client, mock_censor):
     if forwarded_query is None:
         forwarded_query = mock_censor.call_args.args[0]
     assert forwarded_query == KeywordQuery(
-        "test query", "week", cross_sections=[Demographic.RACE, Demographic.GENDER]
+        "test query",
+        "week",
+        cross_sections=[Demographic.RACE, Demographic.GENDER],
+        time_range=(date(2020, 10, 1), date(2020, 12, 31)),
     )
 
     assert json.loads(response.data) == {

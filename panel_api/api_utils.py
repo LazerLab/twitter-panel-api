@@ -44,7 +44,7 @@ class KeywordQuery:
         before = raw_query.get("before")
         after = raw_query.get("after")
         time_range = [
-            datetime.strptime(time, "%Y-%m-%d") if time is not None else None
+            datetime.strptime(time, "%Y-%m-%d").date() if time is not None else None
             for time in [after, before]
         ]
 

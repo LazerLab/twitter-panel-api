@@ -15,7 +15,6 @@ def test_parse_query_valid():
         {
             "keyword_query": "keyword",
             "aggregate_time_period": "week",
-            "cross_sections": None,
         },
         {
             "keyword_query": "key word",
@@ -26,6 +25,22 @@ def test_parse_query_valid():
                 "tsmart_state",
                 "vb_age_decade",
             ],
+        },
+        {
+            "keyword_query": "keyword",
+            "aggregate_time_period": "day",
+            "after": "2019-01-01",
+        },
+        {
+            "keyword_query": "keyword",
+            "aggregate_time_period": "day",
+            "before": "2019-01-01",
+        },
+        {
+            "keyword_query": "keyword",
+            "aggregate_time_period": "day",
+            "after": "2019-01-01",
+            "before": "2020-01-01",
         },
     ]
 
@@ -51,20 +66,26 @@ def test_parse_query_valid():
 
 def test_parse_query_invalid():
     invalid_inputs = [
-        {"search_query": None, "aggregate_time_period": "day"},  # Missing search query
+        {"keyword_query": None, "aggregate_time_period": "day"},  # Missing search query
         {
-            "search_query": "keyword",
+            "keyword_query": "keyword",
             "aggregate_time_period": "dy",
         },  # Invalid time aggregation
         {
-            "search_query": "keyword",
+            "keyword_query": "keyword",
             "aggregate_time_period": None,
         },  # Missing time aggregation
         {
-            "search_query": "key word",
+            "keyword_query": "key word",
             "time_agg": "week",
             "cross_sections": ["age", "v_gender"],
         },  # Invalid demographic
+        {
+            "keyword_query": "keyword",
+            "time_agg": "day",
+            "after": "2020-10-10",
+            "before": "2020-10-01",
+        },  # Invalid time range
     ]
 
     for input in invalid_inputs:
