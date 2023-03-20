@@ -1,6 +1,7 @@
 from .config import Config, VALID_AGG_TERMS, Demographic
 import itertools
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Optional, Tuple
+from datetime import datetime, date, timedelta
 import pandas as pd
 from .data_utils import fill_record_counts, fill_value_counts
 
@@ -18,27 +19,76 @@ def int_or_nan(b) -> int:
         return 0
 
 
-def validate_keyword_search_input(
-    search_query: str, agg_by: str, group_by: Iterable[Demographic] = None
-) -> bool:
-    """
-    for the keyword_search endpoint, validate the two inputs from the user.
-    search_query should be a string of length greater than 1,
-    and agg_by should be in the set of valid aggregation terms.
-    returns a boolean value (True if valid).
-    """
-    if search_query == "":
-        return False
-    elif search_query is None:
-        return False
-    if agg_by not in VALID_AGG_TERMS:
-        return False
-    if group_by is not None:
-        if len([*group_by]) > len(set(group_by)) or any(
-            (d not in [*Demographic] for d in group_by)
-        ):
+class KeywordQuery:
+    def __init__(
+        self,
+        keyword: str,
+        time_aggregation: str,
+        cross_sections: Iterable[Demographic] = [],
+        time_range: Tuple[Optional[date], Optional[date]] = (None, None),
+    ):
+        self.keyword = keyword
+        self.time_aggregation = time_aggregation
+        self.cross_sections = [*cross_sections] if cross_sections else []
+        self.time_range = tuple(time_range)
+        if not self.validate():
+            raise ValueError()
+
+    @staticmethod
+    def from_raw_query(raw_query: Mapping):
+        search_query = raw_query.get("keyword_query")
+        agg_by = raw_query.get("aggregate_time_period")
+        group_by = raw_query.get("cross_sections")
+        if group_by:
+            group_by = [*map(demographic_from_name, group_by)]
+        before = raw_query.get("before")
+        after = raw_query.get("after")
+        time_range = [
+            datetime.strptime(time, "%Y-%m-%d") if time is not None else None
+            for time in [after, before]
+        ]
+
+        try:
+            return KeywordQuery(
+                keyword=search_query,
+                time_aggregation=agg_by,
+                cross_sections=group_by,
+                time_range=time_range,
+            )
+        except ValueError:
+            return None
+
+    def validate(self) -> bool:
+        """
+        for the keyword_search endpoint, validate the two inputs from the user.
+        search_query should be a string of length greater than 1,
+        and agg_by should be in the set of valid aggregation terms.
+        returns a boolean value (True if valid).
+        """
+        if not self.keyword:
             return False
-    return True
+        if self.time_aggregation not in VALID_AGG_TERMS:
+            return False
+        if self.cross_sections:
+            if len([*self.cross_sections]) > len(set(self.cross_sections)) or any(
+                (d not in [*Demographic] for d in self.cross_sections)
+            ):
+                return False
+        if len(self.time_range) != 2:
+            return False
+        if all([time is not None for time in self.time_range]):
+            if self.time_range[1] - self.time_range[0] < timedelta(0):
+                return False
+        return True
+
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, KeywordQuery):
+            return self.__dict__ == __o.__dict__
+        else:
+            return False
+
+    def __ne__(self, __o: object) -> bool:
+        return not self.__eq__(__o)
 
 
 def validate_keyword_search_output(
@@ -120,25 +170,6 @@ def censor_keyword_search_output(
                     for category, count in period[dem].items()
                 }
     return response_data
-
-
-def parse_query(raw_query):
-    search_query = raw_query.get("keyword_query")
-    agg_by = raw_query.get("aggregate_time_period")
-    group_by = raw_query.get("cross_sections")
-    if group_by is not None:
-        group_by = [*map(demographic_from_name, group_by)]
-
-    parsed_query = {
-        "search_query": search_query,
-        "agg_by": agg_by,
-        "group_by": group_by,
-    }
-
-    if validate_keyword_search_input(**parsed_query):
-        return parsed_query
-    else:
-        return None
 
 
 def demographic_from_name(name) -> Demographic | None:

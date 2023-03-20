@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import panel_api.sources as sources
+from panel_api.api_utils import KeywordQuery
 from datetime import datetime
 import pandas as pd
 from .utils import period_equals, list_equals_ignore_order
@@ -107,9 +108,9 @@ def test_es_query_daily(mock_es_search, mock_voter_db, tweet_data, voter_data):
     mock_es_search.return_value = tweet_data
     mock_voter_db.return_value = voter_data
     results = sources.ElasticsearchTwitterPanelSource().query_from_api(
-        search_query="dinosaur", agg_by="day"
+        KeywordQuery("dinosaur", time_aggregation="day")
     )
-    mock_es_search.assert_called_once_with("dinosaur")
+    mock_es_search.assert_called_once_with("dinosaur", (None, None))
 
     expected_results = [
         {
@@ -171,9 +172,9 @@ def test_es_query_weekly(mock_es_search, mock_voter_db, tweet_data, voter_data):
     mock_es_search.return_value = tweet_data
     mock_voter_db.return_value = voter_data
     results = sources.ElasticsearchTwitterPanelSource().query_from_api(
-        search_query="dinosaur", agg_by="week"
+        KeywordQuery("dinosaur", time_aggregation="week")
     )
-    mock_es_search.assert_called_once_with("dinosaur")
+    mock_es_search.assert_called_once_with("dinosaur", (None, None))
 
     expected_results = [
         {

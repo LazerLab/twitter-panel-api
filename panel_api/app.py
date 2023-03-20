@@ -2,9 +2,8 @@ from flask import Flask, request
 
 from .config import Config
 from .api_utils import (
-    validate_keyword_search_input,
     censor_keyword_search_output,
-    parse_query,
+    KeywordQuery,
 )
 from .sources import CSVSource, ElasticsearchTwitterPanelSource
 
@@ -19,14 +18,13 @@ def keyword_search():
     """
     message = "unknown error"
     request_json = request.get_json()
-    query = parse_query(request_json)
+    query = KeywordQuery.from_raw_query(request_json)
     if query is not None:
         results = ElasticsearchTwitterPanelSource().query_from_api(
-            **query, fill_zeros=True
+            query, fill_zeros=True
         )
         return {
-            "query": query["search_query"],
-            "agg_time_period": query["agg_by"],
+            "query": request_json,
             "response_data": censor_keyword_search_output(
                 results, remove_censored_values=False
             ),
@@ -35,27 +33,26 @@ def keyword_search():
         message = "invalid query"
 
     return {
-        "query": request_json["keyword_query"],
-        "agg_time_period": request_json["aggregate_time_period"],
+        "query": request_json,
         "response_data": message,
     }
 
 
-@app.route("/csv_keyword_search", methods=["GET", "POST"])
-def csv_keyword_search():
-    search_query = request.get_json()["keyword_query"]
-    agg_by = request.get_json()["aggregate_time_period"]
-    if validate_keyword_search_input(search_query, agg_by):
-        results = CSVSource("").query_from_api(search_query=search_query, agg_by=agg_by)
-        return {
-            "query": search_query,
-            "agg_time_period": agg_by,
-            "response_data": results,
-        }
-    else:
-        message = "invalid query"
-        return {
-            "query": search_query,
-            "agg_time_period": agg_by,
-            "response_data": message,
-        }
+# @app.route("/csv_keyword_search", methods=["GET", "POST"])
+# def csv_keyword_search():
+#     search_query = request.get_json()["keyword_query"]
+#     agg_by = request.get_json()["aggregate_time_period"]
+#     if validate_keyword_search_input(search_query, agg_by):
+#         results = CSVSource("").query_from_api(search_query=search_query, agg_by=agg_by)
+#         return {
+#             "query": search_query,
+#             "agg_time_period": agg_by,
+#             "response_data": results,
+#         }
+#     else:
+#         message = "invalid query"
+#         return {
+#             "query": search_query,
+#             "agg_time_period": agg_by,
+#             "response_data": message,
+#         }

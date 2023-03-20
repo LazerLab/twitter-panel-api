@@ -1,4 +1,5 @@
 import panel_api.api_utils as api_utils
+from panel_api.api_utils import KeywordQuery
 from panel_api.config import Demographic
 import pytest
 from unittest.mock import patch
@@ -6,26 +7,6 @@ import copy
 from .utils import list_equals_ignore_order, period_equals
 from datetime import datetime
 import pandas as pd
-
-
-def test_keyword_search_input_valid():
-    valid_inputs = [
-        {"search_query": "keyword", "agg_by": "day"},
-        {"search_query": "keyword", "agg_by": "week", "group_by": None},
-        {
-            "search_query": "key word",
-            "agg_by": "day",
-            "group_by": [
-                Demographic.RACE,
-                Demographic.GENDER,
-                Demographic.STATE,
-                Demographic.AGE,
-            ],
-        },
-    ]
-
-    for input in valid_inputs:
-        assert api_utils.validate_keyword_search_input(**input)
 
 
 def test_parse_query_valid():
@@ -48,29 +29,24 @@ def test_parse_query_valid():
         },
     ]
 
-    parsed_queries = [api_utils.parse_query(input) for input in valid_inputs]
+    parsed_queries = [KeywordQuery.from_raw_query(input) for input in valid_inputs]
     expected_queries = [
-        {"search_query": "keyword", "agg_by": "day", "group_by": None},
-        {"search_query": "keyword", "agg_by": "week", "group_by": None},
-        {
-            "search_query": "key word",
-            "agg_by": "day",
-            "group_by": [
+        KeywordQuery("keyword", "day"),
+        KeywordQuery("keyword", "week"),
+        KeywordQuery(
+            "key word",
+            "day",
+            cross_sections=[
                 Demographic.RACE,
                 Demographic.GENDER,
                 Demographic.STATE,
                 Demographic.AGE,
             ],
-        },
+        ),
     ]
 
     for expected, actual in zip(expected_queries, parsed_queries):
-        assert expected["search_query"] == actual["search_query"]
-        assert expected["agg_by"] == actual["agg_by"]
-        if expected["group_by"] is not None:
-            assert set(expected["group_by"]) == set(actual["group_by"])
-        else:
-            assert actual["group_by"] is None
+        assert expected == actual
 
 
 def test_parse_query_invalid():
@@ -92,23 +68,7 @@ def test_parse_query_invalid():
     ]
 
     for input in invalid_inputs:
-        assert api_utils.parse_query(input) is None
-
-
-def test_keyword_search_input_invalid():
-    invalid_inputs = [
-        {"search_query": None, "agg_by": "day"},  # Missing search query
-        {"search_query": "keyword", "agg_by": "dy"},  # Invalid time aggregation
-        {"search_query": "keyword", "agg_by": None},  # Missing time aggregation
-        {
-            "search_query": "key word",
-            "agg_by": "week",
-            "group_by": [Demographic.AGE, None],
-        },  # Invalid demographics
-    ]
-
-    for input in invalid_inputs:
-        assert not api_utils.validate_keyword_search_input(**input)
+        assert KeywordQuery.from_raw_query(input) is None
 
 
 def test_keyword_search_output_valid(valid_outputs):

@@ -1,12 +1,10 @@
-import requests
 import pandas as pd
 import numpy as np
-import itertools
 
 import panel_api.api_utils as api_utils
-from .api_utils import int_or_nan, demographic_from_name
+from .api_utils import int_or_nan, KeywordQuery
 from .config import Config, AGG_TO_ROUND_KEY, Demographic
-from .es_utils import elastic_query_for_keyword, elastic_query_users
+from .es_utils import elastic_query_for_keyword
 from .sql_utils import collect_voters
 
 
@@ -19,9 +17,7 @@ class MediaSource(object):
     ***DON'T USE THIS CLASS DIRECTLY***
     """
 
-    def query_from_api(
-        self, search_query, agg_by="day", group_by=None, fill_zeros=False, **kwargs
-    ):
+    def query_from_api(self, query: KeywordQuery, fill_zeros=False, **kwargs):
         """
         Create a data response for a keyword search query on a particular MediaSource.
         This is intended to be used directly by the Flask API when it wants data.
@@ -36,17 +32,19 @@ class MediaSource(object):
         Returns:
         Keyword search response
         """
-        data = self._query_from_api(search_query=search_query, **kwargs)
+        data = self._query_from_api(
+            search_query=query.keyword, time_range=query.time_range, **kwargs
+        )
         data = MediaSource.add_demographics(data, id_column="userid")
         return MediaSource.aggregate_tabular_data(
             full_df=data,
             ts_col_name="created_at",
-            time_agg=agg_by,
-            group_by=group_by,
+            time_agg=query.time_aggregation,
+            group_by=query.cross_sections,
             fill_zeros=fill_zeros,
         )
 
-    def _query_from_api(self, search_query) -> pd.DataFrame:
+    def _query_from_api(self, search_query, time_range) -> pd.DataFrame:
         """
         Collect keyword search data from this source. Must be implemented by subclasses.
 
@@ -86,7 +84,7 @@ class MediaSource(object):
             t_dict["n_tweeters"] = len(t)
             for i in Demographic:
                 t_dict[i] = t[i].value_counts().to_dict()
-            if group_by is not None:
+            if group_by:
                 count_label = group_by[0]
                 t_dict["groups"] = (
                     t.groupby(group_by)[count_label]
@@ -125,7 +123,7 @@ class MediaSource(object):
 
 
 class ElasticsearchTwitterPanelSource(MediaSource):
-    def _query_from_api(self, search_query=""):
+    def _query_from_api(self, search_query, time_range):
         """
         query function for the API to pull data out of Elasticsearch based on a search query.
         the data will then be aggregated at the level specified by agg_by.
@@ -133,7 +131,7 @@ class ElasticsearchTwitterPanelSource(MediaSource):
         agg_by: one of the valid aggregation levels
         returns: list of nested dicts, one for each time period, with data about who tweeted with the search query.
         """
-        res = elastic_query_for_keyword(search_query)
+        res = elastic_query_for_keyword(search_query, time_range)
         # querying ES for the query (no booleans or whatever exist yet!!)
         results = []
         # we make a dataframe out of the results.
