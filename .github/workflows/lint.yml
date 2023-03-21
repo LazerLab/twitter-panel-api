@@ -32,8 +32,8 @@ jobs:
         run: |
           set -o pipefail
           PYTHON_FILES=$(git ls-files *.py)
-          isort --check PYTHON_FILES
-          black --check PYTHON_FILES
-          flake8 PYTHON_FILES
-          mypy PYTHON_FILES
+          isort --check $PYTHON_FILES
+          black --check $PYTHON_FILES
+          flake8 $PYTHON_FILES
+          mypy $PYTHON_FILES
           
