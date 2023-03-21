@@ -28,8 +28,8 @@ def fill_record_counts(records, values_mapping: Mapping, fill_value=0):
 
     Parameters:
     records: Count records
-    values_mapping: List of all possible values per key. The keys of this dict should match
-        the keys in the records
+    values_mapping: List of all possible values per key. The keys of this dict should
+        match the keys in the records
     count_label: The key of the count field in the records
     fill_value: What to fill missing values with
 

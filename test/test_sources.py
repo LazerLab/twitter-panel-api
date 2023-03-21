@@ -14,7 +14,8 @@ from .utils import list_equals_ignore_order, period_equals
 @pytest.fixture
 def tweet_data():
     """
-    Data entries have been truncated for brevity and my sanity. If more of the actual structure becomes relevent, it should be added.
+    Data entries have been truncated for brevity and my sanity. If more of the actual
+    structure becomes relevent, it should be added.
     """
     data = [
         {"created_at": "2023-02-17", "user": {"id": "0"}},

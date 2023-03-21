@@ -139,13 +139,15 @@ class ElasticsearchTwitterPanelSource(MediaSource):
 
     def _query_from_api(self, search_query, time_range):
         """
-        query function for the API to pull data out of Elasticsearch based on a search query.
-        the data will then be aggregated at the level specified by agg_by.
-        search_query: should be validated by functions upstream; is a string of length at least 1.
+        query function for the API to pull data out of Elasticsearch based on a search
+        query. the data will then be aggregated at the level specified by agg_by.
+
+        search_query: should be validated by functions upstream; is a string of length
+            at least 1.
         agg_by: one of the valid aggregation levels
 
-        returns: list of nested dicts, one for each time period, with data about who tweeted with
-            the search query.
+        returns: list of nested dicts, one for each time period, with data about who
+            tweeted with the search query.
         """
         res = elastic_query_for_keyword(search_query, time_range)
         # querying ES for the query (no booleans or whatever exist yet!!)

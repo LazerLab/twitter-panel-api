@@ -14,7 +14,8 @@ app.config.update(Config()["flask"])
 @app.route("/keyword_search", methods=["GET", "POST"])
 def keyword_search():
     """
-    basic endpoint for querying the ES-indexed portion of the twitter panel and their tweets
+    basic endpoint for querying the ES-indexed portion of the twitter panel and their
+    tweets
     """
     message = "unknown error"
     request_json = request.get_json()

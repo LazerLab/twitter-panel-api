@@ -15,7 +15,9 @@ def elastic_query_for_keyword(
     keyword: str, before: Optional[date] = None, after: Optional[date] = None
 ):
     """
-    Given a string (keyword), return all tweets in the tweets index that contain that string.
+    Given a string (keyword), return all tweets in the tweets index that contain
+    that string.
+
     Return as raw ES output.
     """
     es_conf = Config()["elasticsearch"]
