@@ -1,0 +1,11 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "panel_api"
+version = "0.1.0"
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+include = ["panel_api*"]
