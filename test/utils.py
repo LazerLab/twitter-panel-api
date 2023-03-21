@@ -11,8 +11,10 @@ def period_equals(period1, period2):
 
 
 def list_equals_ignore_order(list1, list2, item_equality=None):
-    if item_equality == None:
-        item_equality = lambda a, b: a == b
+    if item_equality is None:
+
+        def item_equality(a, b):
+            return a == b
 
     return (
         len(list1) == len(list2)
