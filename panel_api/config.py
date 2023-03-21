@@ -7,11 +7,6 @@ from enum import Enum
 from typing import Any, Mapping
 
 _default_config = {
-    "tweet_schema": "/net/data/twitter-covid/tweet_schema.json",
-    "voter_file_loc": "hdfs://megatron.ccs.neu.edu/user/lab-lazer/TSmart-cleaner-Oct2017-rawFormat.csv",
-    "panel_tweets_loc": "hdfs://megatron.ccs.neu.edu/user/nir/panel_tweets/created_at_bucket=2022-06-16",
-    "csv_data_loc": "/home/asmithh/god_all_tweets.tsv",
-    "csv_text_col": "text",
     "user_count_privacy_threshold": 10,
     "cross_sections_limit": 2,
     "flask": {"SECRET_KEY": "flask_secret_key"},
