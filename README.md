@@ -1,3 +1,4 @@
+[![Linting](https://github.com/hdelc/tweet-search-dashboard/actions/workflows/lint.yml/badge.svg)](https://github.com/hdelc/tweet-search-dashboard/actions/workflows/lint.yml)
 # tweet-search-dashboard
 dashboard app for searching twitter panel tweets &amp; aggregating info
 
