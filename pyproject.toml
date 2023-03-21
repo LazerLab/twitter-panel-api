@@ -16,3 +16,6 @@ extend-ignore = ["E203"]
 
 [tool.isort]
 profile = "black"
+
+[tool.mypy]
+ignore_missing_imports = true

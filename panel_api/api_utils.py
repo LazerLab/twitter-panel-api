@@ -1,11 +1,14 @@
 """
 Module for API-specific utilities.
 """
+from __future__ import annotations
+
 from datetime import date, datetime, timedelta
 from typing import Any, Iterable, Mapping, Optional, Tuple
 
 from .config import VALID_AGG_TERMS, Config, Demographic
 from .data_utils import fill_record_counts, fill_value_counts
+from .helpers import if_present
 
 
 def int_or_nan(num) -> int:
@@ -30,7 +33,7 @@ class KeywordQuery:
         self,
         keyword: str,
         time_aggregation: str,
-        cross_sections: Iterable[Demographic] = None,
+        cross_sections: Optional[Iterable[Demographic]] = None,
         time_range: Tuple[Optional[date], Optional[date]] = (None, None),
     ):
         self.keyword = keyword
@@ -41,7 +44,7 @@ class KeywordQuery:
             raise ValueError()
 
     @staticmethod
-    def from_raw_query(raw_query: Mapping):
+    def from_raw_query(raw_query: Mapping) -> Optional[KeywordQuery]:
         """
         Try to create a KeywordQuery from an API query dict. Returns None on failure.
         """
@@ -52,20 +55,22 @@ class KeywordQuery:
             group_by = [*map(demographic_from_name, group_by)]
         before = raw_query.get("before")
         after = raw_query.get("after")
-        time_range = [
-            datetime.strptime(time, "%Y-%m-%d").date() if time is not None else None
-            for time in [after, before]
-        ]
+        time_range = (
+            if_present(parse_api_date, after),
+            if_present(parse_api_date, before),
+        )
 
-        try:
-            return KeywordQuery(
-                keyword=search_query,
-                time_aggregation=agg_by,
-                cross_sections=group_by,
-                time_range=time_range,
-            )
-        except ValueError:
-            return None
+        if search_query and agg_by:
+            try:
+                return KeywordQuery(
+                    keyword=search_query,
+                    time_aggregation=agg_by,
+                    cross_sections=group_by,
+                    time_range=time_range,
+                )
+            except ValueError:
+                return None
+        return None
 
     def validate(self) -> bool:
         """
@@ -84,9 +89,9 @@ class KeywordQuery:
             or any((d not in [*Demographic] for d in self.cross_sections))
         ):
             return False
-        if len(self.time_range) != 2 or all(
-            time is not None for time in self.time_range
-        ):
+        if len(self.time_range) != 2:
+            return False
+        if self.time_range[0] is not None and self.time_range[1] is not None:
             if self.time_range[1] - self.time_range[0] < timedelta(0):
                 return False
         return True
@@ -100,8 +105,12 @@ class KeywordQuery:
         return not self.__eq__(__o)
 
 
+def parse_api_date(date_string: str) -> date:
+    return datetime.strptime(date_string, "%Y-%m-%d").date()
+
+
 def validate_keyword_search_output(
-    response_data: Iterable[Mapping[str, Any]], privacy_threshold: int = None
+    response_data: Iterable[Mapping[str, Any]], privacy_threshold: int = -1
 ) -> bool:
     """
     Check whether returned aggregate results are reasonably protective of privacy.
@@ -109,7 +118,7 @@ def validate_keyword_search_output(
     given privacy threshold. If no threshold is given, then
     USER_COUNT_PRIVACY_THRESHOLD will be used.
     """
-    if privacy_threshold is None:
+    if privacy_threshold < 0:
         privacy_threshold = Config()["user_count_privacy_threshold"]
 
     for period in response_data:
@@ -137,8 +146,8 @@ def validate_keyword_search_output(
 
 
 def censor_keyword_search_output(
-    response_data: Iterable[Mapping[str, Any]],
-    privacy_threshold: int = None,
+    response_data: Iterable[dict[str, Any]],
+    privacy_threshold: int = -1,
     remove_censored_values=True,
 ) -> Iterable[Mapping[str, Any]]:
     """
@@ -148,7 +157,7 @@ def censor_keyword_search_output(
 
     Note: This mutates the provided response_data
     """
-    if privacy_threshold is None:
+    if privacy_threshold < 0:
         privacy_threshold = Config()["user_count_privacy_threshold"]
 
     if remove_censored_values:

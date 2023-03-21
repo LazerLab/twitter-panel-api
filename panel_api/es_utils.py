@@ -34,7 +34,7 @@ def elastic_query_for_keyword(
         {"lte": before.strftime("%Y-%m-%d")} if before is not None else {}
     )
     range_query.update({"gte": after.strftime("%Y-%m-%d")} if after is not None else {})
-    if len(range_query > 0):
+    if len(range_query) > 0:
         search = search.query(Range(created_at=range_query))
     res = search.scan()
     return res

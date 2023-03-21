@@ -2,6 +2,7 @@
 Module containing classes for backend data sources.
 """
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -66,7 +67,7 @@ class MediaSource(ABC):
         full_df,
         ts_col_name,
         time_agg,
-        group_by: list[str] = None,
+        group_by: Optional[list[Demographic]] = None,
         fill_zeros=False,
     ):
         """
@@ -116,7 +117,7 @@ class MediaSource(ABC):
         """
         # grab all the users who tweeted
         users = collect_voters(set(tweet_data[id_column]))
-        users_df = pd.DataFrame(users)
+        users_df = pd.DataFrame((dict(user) for user in users))
 
         # coerce user IDs
         users_df["twProfileID"] = users_df["twProfileID"].apply(int_or_nan)
