@@ -150,7 +150,9 @@ class ElasticsearchTwitterPanelSource(MediaSource):
         returns: list of nested dicts, one for each time period, with data about who
             tweeted with the search query.
         """
-        res = elastic_query_for_keyword(search_query, time_range)
+        res = elastic_query_for_keyword(
+            search_query, before=time_range[1], after=time_range[0]
+        )
         # querying ES for the query (no booleans or whatever exist yet!!)
         results = []
         # we make a dataframe out of the results.
