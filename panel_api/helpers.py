@@ -1,3 +1,7 @@
+"""
+Helper functions for code ergonomics. Avoid putting every stray function in here.
+"""
+
 from typing import Callable, Optional, TypeVar
 
 T = TypeVar("T")
