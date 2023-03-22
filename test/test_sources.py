@@ -114,7 +114,7 @@ def test_es_query_daily(mock_es_search, mock_voter_db, tweet_data, voter_data):
     results = sources.ElasticsearchTwitterPanelSource().query_from_api(
         KeywordQuery("dinosaur", time_aggregation="day")
     )
-    mock_es_search.assert_called_once_with("dinosaur", (None, None))
+    mock_es_search.assert_called_once_with("dinosaur", before=None, after=None)
 
     expected_results = [
         {
@@ -178,7 +178,7 @@ def test_es_query_weekly(mock_es_search, mock_voter_db, tweet_data, voter_data):
     results = sources.ElasticsearchTwitterPanelSource().query_from_api(
         KeywordQuery("dinosaur", time_aggregation="week")
     )
-    mock_es_search.assert_called_once_with("dinosaur", (None, None))
+    mock_es_search.assert_called_once_with("dinosaur", before=None, after=None)
 
     expected_results = [
         {
