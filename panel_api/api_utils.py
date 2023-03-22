@@ -106,6 +106,7 @@ class KeywordQuery:
 
 
 def parse_api_date(date_string: str) -> date:
+    """Parse this API's date string format to a date object."""
     return datetime.strptime(date_string, "%Y-%m-%d").date()
 
 

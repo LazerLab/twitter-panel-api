@@ -19,3 +19,7 @@ profile = "black"
 
 [tool.mypy]
 ignore_missing_imports = true
+
+[tool.pylint] # Only use pylint for documentation checking. flake8 is the main linter
+disable = "all"
+enable = ["C0114", "C0116"]
