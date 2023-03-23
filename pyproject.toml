@@ -23,3 +23,16 @@ ignore_missing_imports = true
 [tool.pylint] # Only use pylint for documentation checking. flake8 is the main linter
 disable = "all"
 enable = ["C0114", "C0116"]
+
+[tool.semantic_release]
+branch = "main"
+version_variable = "panel_api/__init__.py:__version__"
+version_toml = "pyproject.toml:project.version"
+version_source = "tag"
+commit_version_number = true
+commit_message = "{version} [skip ci]"
+tag_commit = true
+major_on_zero = false
+upload_to_pypi = false
+upload_to_release = false
+hvcs = "github"

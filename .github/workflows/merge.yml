@@ -1,0 +1,22 @@
+---
+name: Merge main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Testing
+    uses: ./.github/workflows/test.yml
+  lint:
+    name: Linting
+    uses: ./.github/workflows/lint.yml
+  release:
+    name: Release
+    needs:
+      - test
+      - lint
+    uses: ./.github/workflows/release.yml
+    secrets: inherit
