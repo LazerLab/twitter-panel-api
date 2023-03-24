@@ -2,7 +2,7 @@
 Module containing classes for backend data sources.
 """
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Collection, Optional
 
 import numpy as np
 import pandas as pd
@@ -188,3 +188,44 @@ class CensoredSource(MediaSource):
 
     def _query_from_api(self, search_query, time_range) -> pd.DataFrame:
         raise NotImplementedError()
+
+
+class DemographicSource(ABC):
+    """
+    Source of demographic information about Twitter users.
+    """
+
+    @abstractmethod
+    def get_demographics(self, twitter_user_ids: Collection[str]) -> pd.DataFrame:
+        """
+        Get demographic information of Twitter users.
+
+        Parameters:
+        twitter_user_ids: ids to collect demographics for
+
+        Returns:
+        Pandas Dataframe, with the following columns:
+        - "userid": Twitter user id
+        - One column for each demographic in `api_utils.Demographic`
+        """
+
+
+class PostgresDemographicSource(DemographicSource):
+    """
+    PostgreSQL source of demographic information about Twitter users.
+    """
+
+    def __init__(self, **kwargs) -> None:
+        """
+        Create a PostgreSQL demographic source.
+
+        Parameters:
+        kwargs: PostgreSQL connection parameters
+        """
+        self.connection_params = kwargs
+
+    def get_demographics(self, twitter_user_ids: Collection[str]) -> pd.DataFrame:
+        voters = collect_voters(
+            twitter_ids=twitter_user_ids, connection_params=self.connection_params
+        )
+        return pd.DataFrame(dict(voter) for voter in voters)

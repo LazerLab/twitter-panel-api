@@ -1,17 +1,21 @@
 """
 Module for interacting with a PostgreSQL data backend.
 """
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Optional
 
 import psycopg2
 
 from .config import Config
 
 
-def collect_voters(twitter_ids: Iterable[str]) -> Iterable[Mapping[str, Any]]:
+def collect_voters(
+    twitter_ids: Iterable[str], connection_params: Optional[Mapping] = None
+) -> Iterable[Mapping[str, Any]]:
     """
     Collect panel voters' information from their Twitter user IDs.
     """
+    if connection_params is None:
+        connection_params = Config()["postgresql"]
     temp_table_command = """
     CREATE TABLE temp (
         id varchar(255)
@@ -26,7 +30,7 @@ def collect_voters(twitter_ids: Iterable[str]) -> Iterable[Mapping[str, Any]]:
     ON voters.twProfileID=temp.id
     """
 
-    conn = psycopg2.connect(**Config()["postgresql"])
+    conn = psycopg2.connect(**connection_params)
     cur = conn.cursor()
 
     cur.execute(temp_table_command)
