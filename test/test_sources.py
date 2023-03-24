@@ -6,7 +6,7 @@ import pytest
 
 import panel_api.sources as sources
 from panel_api.api_utils import KeywordQuery
-from panel_api.config import Demographic
+from panel_api.api_values import Demographic
 
 from .utils import list_equals_ignore_order, period_equals
 
