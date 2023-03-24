@@ -80,3 +80,16 @@ Response:
   ]
 }
 ```
+
+# Contributing
+
+This repository uses the "Squash & Merge" strategy to merge pull requests with the `main` branch. Because of this, please make sure your pull requests only make one self-contained change, since any commits in the pull request will not be able to be teased apart once they are merged.
+
+All pull requests to this repository must pass a few automated checks before they may be accepted:
+
+- Linting
+  - Ensure `make lint` passes for your code. This runs style checks and static type checks. Formatting issues can be solved with `make format`, but missing documentation and improper types must be manually handled. I'd recommend putting `make lint` in a Git hook, so your pull requests aren't denied.
+- Testing
+  - Ensure `make test` passes for your code. At present, this just runs the existing unit tests. If you add/change functionality, it would be wonderful if you also add tests for that in the same PR. Also, I recommend putting `make test` in a Git hook.
+- Conventional PR Title
+  - When creating a PR, write the title to follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) format. This helps readers understand what the PR is doing and keeps the commit history tidy. This is also a strict requirement because these commit labels allow automatic semantic version bumps.
