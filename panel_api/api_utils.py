@@ -6,7 +6,8 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from typing import Any, Iterable, Mapping, Optional, Tuple
 
-from .config import VALID_AGG_TERMS, Config, Demographic
+from .api_values import Demographic, TimeAggregation
+from .config import Config
 from .data_utils import fill_record_counts, fill_value_counts
 from .helpers import if_present
 
@@ -32,12 +33,12 @@ class KeywordQuery:
     def __init__(
         self,
         keyword: str,
-        time_aggregation: str,
+        time_aggregation: TimeAggregation,
         cross_sections: Optional[Iterable[Demographic]] = None,
         time_range: Tuple[Optional[date], Optional[date]] = (None, None),
     ):
         self.keyword = keyword
-        self.time_aggregation = time_aggregation
+        self.time_aggregation = TimeAggregation(time_aggregation)
         self.cross_sections = [*cross_sections] if cross_sections else []
         self.time_range = tuple(time_range)
         if not self.validate():
@@ -81,7 +82,7 @@ class KeywordQuery:
         """
         if not self.keyword:
             return False
-        if self.time_aggregation not in VALID_AGG_TERMS:
+        if self.time_aggregation not in TimeAggregation:
             return False
         if self.cross_sections and (
             len(self.cross_sections) > Config()["cross_sections_limit"]

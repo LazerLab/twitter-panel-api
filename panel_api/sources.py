@@ -10,7 +10,7 @@ import pandas as pd
 from panel_api import api_utils
 
 from .api_utils import KeywordQuery, censor_keyword_search_output, int_or_nan
-from .config import AGG_TO_ROUND_KEY, Demographic
+from .api_values import Demographic, TimeAggregation
 from .es_utils import elastic_query_for_keyword
 from .sql_utils import collect_voters
 
@@ -66,14 +66,14 @@ class MediaSource(ABC):
     def aggregate_tabular_data(
         full_df,
         ts_col_name,
-        time_agg,
+        time_agg: TimeAggregation,
         group_by: Optional[list[Demographic]] = None,
         fill_zeros=False,
     ):
         """
         Aggregate data into time-sliced records.
         """
-        agg_freq_str = AGG_TO_ROUND_KEY[time_agg]
+        agg_freq_str = TimeAggregation.round_key(time_agg)
         full_df[f"{time_agg}_rounded"] = (
             pd.to_datetime(full_df[ts_col_name])
             .dt.to_period(agg_freq_str)

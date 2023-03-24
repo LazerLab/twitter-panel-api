@@ -1,9 +1,8 @@
 """
-Define config values and constants for the API.
+Define config values for the API.
 """
 import json
 import os
-from enum import Enum
 from typing import Any, Mapping
 
 _default_config = {
@@ -44,110 +43,3 @@ class Config(dict):
         Parse a config JSON file into a Python dict.
         """
         return json.load(open(path, encoding="utf-8"))
-
-
-VALID_AGG_TERMS = {"day", "week", "month"}
-AGG_TO_ROUND_KEY = {"day": "D", "week": "W", "month": "M"}
-
-
-class Demographic(str, Enum):
-    """
-    Demographics that can be queried in the API.
-    """
-
-    STATE = "tsmart_state"
-    AGE = "vb_age_decade"
-    GENDER = "voterbase_gender"
-    RACE = "voterbase_race"
-
-    def __str__(self):
-        return self.value
-
-    def values(self):
-        """
-        Return a list of all possible API values for a demographic.
-        """
-        return DEMOGRAPHIC_VALUES[self]
-
-
-DEMOGRAPHIC_VALUES = {
-    Demographic.RACE: [
-        "Caucasian",
-        "African-American",
-        "Hispanic",
-        "Uncoded",
-        "Asian",
-        "Other",
-        "Native American",
-    ],
-    Demographic.AGE: [
-        "10 - 20",
-        "20 - 30",
-        "30 - 40",
-        "40 - 50",
-        "50 - 60",
-        "60 - 70",
-        "70 - 80",
-        "80 - 90",
-        "90 - 100",
-        "100 - 110",
-        "110 - 120",
-        "120 - 130",
-        "130 - 140",
-        "140 - 150",
-    ],
-    Demographic.GENDER: ["Female", "Male", "Unknown"],
-    Demographic.STATE: [
-        "CA",
-        "TX",
-        "NY",
-        "FL",
-        "OH",
-        "IL",
-        "PA",
-        "MI",
-        "GA",
-        "NC",
-        "WA",
-        "MA",
-        "MN",
-        "NJ",
-        "IN",
-        "VA",
-        "CO",
-        "WI",
-        "TN",
-        "AZ",
-        "MO",
-        "OR",
-        "MD",
-        "IA",
-        "KY",
-        "LA",
-        "AL",
-        "SC",
-        "OK",
-        "KS",
-        "CT",
-        "NV",
-        "NE",
-        "AR",
-        "UT",
-        "MS",
-        "DC",
-        "WV",
-        "ME",
-        "NM",
-        "NH",
-        "RI",
-        "ID",
-        "HI",
-        "SD",
-        "MT",
-        "ND",
-        "DE",
-        "AK",
-        "VT",
-        "WY",
-    ],
-}

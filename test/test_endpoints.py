@@ -5,8 +5,8 @@ from unittest.mock import patch
 import pytest
 
 from panel_api.api_utils import KeywordQuery
+from panel_api.api_values import Demographic
 from panel_api.app import app as app_singleton
-from panel_api.config import Demographic
 
 
 @pytest.fixture
