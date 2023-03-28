@@ -4,11 +4,11 @@ Main Flask application endpoints file. Creates the Flask app on import.
 from flask import Flask, request
 
 from .api_utils import KeywordQuery
-from .config import Config
+from .config import get_config_value
 from .sources import CensoredSource, ElasticsearchTwitterPanelSource
 
 app = Flask(__name__)
-app.config.update(Config()["flask"])
+app.config.update(get_config_value("flask"))
 
 
 @app.route("/keyword_search", methods=["GET", "POST"])
@@ -23,7 +23,7 @@ def keyword_search():
     if query is not None:
         source = CensoredSource(
             ElasticsearchTwitterPanelSource(),
-            privacy_threshold=Config()["user_count_privacy_threshold"],
+            privacy_threshold=get_config_value("user_count_privacy_threshold"),
         )
         results = source.query_from_api(query, fill_zeros=True)
         return {"query": request_json, "response_data": results}
