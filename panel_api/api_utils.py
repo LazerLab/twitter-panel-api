@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 from typing import Any, Iterable, Mapping, Optional, Tuple
 
 from .api_values import Demographic, TimeAggregation
-from .config import Config
+from .config import get_config_value
 from .data_utils import fill_record_counts, fill_value_counts
 from .helpers import if_present
 
@@ -85,7 +85,7 @@ class KeywordQuery:
         if self.time_aggregation not in TimeAggregation:
             return False
         if self.cross_sections and (
-            len(self.cross_sections) > Config()["cross_sections_limit"]
+            len(self.cross_sections) > get_config_value("cross_sections_limit")
             or len(self.cross_sections) > len(set(self.cross_sections))
             or any((d not in [*Demographic] for d in self.cross_sections))
         ):
@@ -121,7 +121,7 @@ def validate_keyword_search_output(
     USER_COUNT_PRIVACY_THRESHOLD will be used.
     """
     if privacy_threshold < 0:
-        privacy_threshold = Config()["user_count_privacy_threshold"]
+        privacy_threshold = get_config_value("user_count_privacy_threshold")
 
     for period in response_data:
         if "groups" in period:
@@ -160,7 +160,7 @@ def censor_keyword_search_output(
     Note: This mutates the provided response_data
     """
     if privacy_threshold < 0:
-        privacy_threshold = Config()["user_count_privacy_threshold"]
+        privacy_threshold = get_config_value("user_count_privacy_threshold")
 
     if remove_censored_values:
         for period in response_data:

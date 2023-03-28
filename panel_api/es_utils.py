@@ -8,7 +8,7 @@ from elasticsearch import Elasticsearch, RequestsHttpConnection
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Match, Range
 
-from .config import Config
+from .config import get_config_value
 
 
 def elastic_query_for_keyword(
@@ -20,7 +20,7 @@ def elastic_query_for_keyword(
 
     Return as raw ES output.
     """
-    es_conf = Config()["elasticsearch"]
+    es_conf = get_config_value("elasticsearch")
     es_handle = Elasticsearch(
         **es_conf,
         scheme="https",
@@ -47,7 +47,7 @@ def elastic_query_users(users: list[str]):
     Return as raw ES output.
     """
     es_handle = Elasticsearch(
-        **Config()["elasticsearch"],
+        **get_config_value("elasticsearch"),
         verify_certs=False,
         ssl_show_warn=False,
         connection_class=RequestsHttpConnection,

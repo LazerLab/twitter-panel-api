@@ -24,6 +24,7 @@ _default_config = {
 
 class Config(dict):
     """
+    DO NOT USE OUTSIDE THIS FILE!
     Configuration for the API.
     """
 
@@ -43,3 +44,13 @@ class Config(dict):
         Parse a config JSON file into a Python dict.
         """
         return json.load(open(path, encoding="utf-8"))
+
+
+CONFIG = Config()
+
+
+def get_config_value(key: str, default: Any = None):
+    """
+    Get a value from the global API config.
+    """
+    return CONFIG.get(key, default)
