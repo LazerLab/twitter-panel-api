@@ -4,11 +4,10 @@ Module for interacting with an Elasticsearch backend.
 from datetime import date
 from typing import Optional
 
-from elasticsearch import Elasticsearch, RequestsHttpConnection
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Match, Range
 
-from .config import get_config_value
+from .connections import elasticsearch_connection
 
 
 def elastic_query_for_keyword(
@@ -20,14 +19,7 @@ def elastic_query_for_keyword(
 
     Return as raw ES output.
     """
-    es_conf = get_config_value("elasticsearch")
-    es_handle = Elasticsearch(
-        **es_conf,
-        scheme="https",
-        verify_certs=False,
-        ssl_show_warn=False,
-        connection_class=RequestsHttpConnection,
-    )
+    es_handle = elasticsearch_connection()
     search = Search(using=es_handle, index="tweets").query(Match(full_text=keyword))
     range_query = {}
     range_query.update(
@@ -46,12 +38,7 @@ def elastic_query_users(users: list[str]):
     pull all users from ES that have an ID in the list.
     Return as raw ES output.
     """
-    es_handle = Elasticsearch(
-        **get_config_value("elasticsearch"),
-        verify_certs=False,
-        ssl_show_warn=False,
-        connection_class=RequestsHttpConnection,
-    )
+    es_handle = elasticsearch_connection()
     search = Search(using=es_handle, index="voters").query(
         "terms", twProfileID=[str(u) for u in users]
     )
