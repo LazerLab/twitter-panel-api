@@ -24,7 +24,7 @@ jobs:
           pip install python-semantic-release
       - name: Run semantic release
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
         run: |
           set -o pipefail
           git config --global user.name "github-actions"
