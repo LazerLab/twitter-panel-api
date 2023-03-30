@@ -5,12 +5,16 @@ from abc import ABC, abstractmethod
 from datetime import date
 from typing import Collection, Optional, Tuple, Union
 
-import numpy as np
 import pandas as pd
 
 from panel_api import api_utils
 
-from .api_utils import KeywordQuery, censor_keyword_search_output, int_or_nan
+from .api_utils import (
+    KeywordQuery,
+    categorize_age,
+    censor_keyword_search_output,
+    int_or_nan,
+)
 from .api_values import Demographic, TimeAggregation
 from .es_utils import elastic_query_for_keyword
 from .sql_utils import collect_voters
@@ -60,11 +64,7 @@ class MediaSource(ABC):
             .dt.start_time
         )
         # bucket age by decade
-        full_df[Demographic.AGE] = full_df[Demographic.AGE].apply(
-            lambda b: str(10 * int(b / 10)) + " - " + str(10 + 10 * int(b / 10))
-            if not np.isnan(b)
-            else "unknown"
-        )
+        full_df[Demographic.AGE] = full_df[Demographic.AGE].apply(categorize_age)
         # aggregate by day
         table = full_df.groupby(f"{time_agg}_rounded")
         # get all value counts for each day

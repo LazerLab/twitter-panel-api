@@ -149,7 +149,7 @@ def test_query_daily(
             "n_tweeters": 2,
             "tsmart_state": {"AL": 1, "GA": 1},
             "voterbase_gender": {"Male": 1, "Female": 1},
-            "vb_age_decade": {"20 - 30": 2},
+            "vb_age_decade": {"under 30": 2},
             "voterbase_race": {"Caucasian": 1, "Uncoded": 1},
         },
         {
@@ -167,7 +167,7 @@ def test_query_daily(
             "n_tweeters": 1,
             "tsmart_state": {"MA": 1},
             "voterbase_gender": {"Male": 1},
-            "vb_age_decade": {"70 - 80": 1},
+            "vb_age_decade": {"70+": 1},
             "voterbase_race": {"African-American": 1},
         },
         {
@@ -176,7 +176,7 @@ def test_query_daily(
             "n_tweeters": 5,
             "tsmart_state": {"IA": 1, "IL": 1, "CT": 1, "KS": 1, "CO": 1},
             "voterbase_gender": {"Male": 2, "Female": 2, "Unknown": 1},
-            "vb_age_decade": {"30 - 40": 1, "40 - 50": 2, "50 - 60": 1, "140 - 150": 1},
+            "vb_age_decade": {"30 - 40": 1, "40 - 50": 2, "50 - 60": 1, "70+": 1},
             "voterbase_race": {
                 "Caucasian": 2,
                 "Hispanic": 1,
@@ -221,7 +221,7 @@ def test_query_weekly(
             "n_tweeters": 5,
             "tsmart_state": {"AL": 1, "GA": 1, "PA": 1, "MA": 1, "CT": 1},
             "voterbase_gender": {"Male": 2, "Female": 2, "Unknown": 1},
-            "vb_age_decade": {"20 - 30": 2, "30 - 40": 1, "50 - 60": 2},
+            "vb_age_decade": {"under 30": 2, "30 - 40": 1, "50 - 60": 2},
             "voterbase_race": {
                 "Caucasian": 3,
                 "Asian": 1,
@@ -238,8 +238,7 @@ def test_query_weekly(
                 "30 - 40": 1,
                 "40 - 50": 2,
                 "50 - 60": 1,
-                "70 - 80": 1,
-                "140 - 150": 1,
+                "70+": 2,
             },
             "voterbase_race": {
                 "Caucasian": 2,
@@ -269,7 +268,7 @@ def test_table_group_by(voter_tweets):
             "n_tweeters": 5,
             "tsmart_state": {"AL": 1, "GA": 1, "PA": 1, "MA": 1, "CT": 1},
             "voterbase_gender": {"Male": 2, "Female": 2, "Unknown": 1},
-            "vb_age_decade": {"20 - 30": 2, "30 - 40": 1, "50 - 60": 2},
+            "vb_age_decade": {"under 30": 2, "30 - 40": 1, "50 - 60": 2},
             "voterbase_race": {
                 "Caucasian": 3,
                 "Asian": 1,
@@ -296,8 +295,7 @@ def test_table_group_by(voter_tweets):
                 "30 - 40": 1,
                 "40 - 50": 2,
                 "50 - 60": 1,
-                "70 - 80": 1,
-                "140 - 150": 1,
+                "70+": 2,
             },
             "voterbase_race": {
                 "Caucasian": 2,

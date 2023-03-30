@@ -6,6 +6,8 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from typing import Any, Iterable, Mapping, Optional, Tuple
 
+import numpy as np
+
 from .api_values import Demographic, TimeAggregation
 from .config import get_config_value
 from .data_utils import fill_record_counts, fill_value_counts
@@ -239,3 +241,19 @@ def fill_zeros(results):
             )
         filled_results.append(filled_period)
     return filled_results
+
+
+def categorize_age(age: int) -> str:
+    """
+    Bucket ages into age categories, found in api_values.py.
+    """
+    if np.isnan(age):
+        category = "Unknown"
+    elif age < 30:
+        category = "under 30"
+    elif age >= 70:
+        category = "70+"
+    else:
+        category = str(10 * int(age / 10)) + " - " + str(10 + 10 * int(age / 10))
+
+    return category
