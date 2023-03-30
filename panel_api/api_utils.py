@@ -40,7 +40,7 @@ class KeywordQuery:
         self.keyword = keyword
         self.time_aggregation = TimeAggregation(time_aggregation)
         self.cross_sections = [*cross_sections] if cross_sections else []
-        self.time_range = tuple(time_range)
+        self.time_range = time_range
         if not self.validate():
             raise ValueError()
 
