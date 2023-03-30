@@ -5,7 +5,12 @@ from flask import Flask, request
 
 from .api_utils import KeywordQuery
 from .config import get_config_value
-from .sources import CensoredSource, ElasticsearchTwitterPanelSource
+from .sources import (
+    CensoredSource,
+    CompositeSource,
+    ElasticsearchTwitterPanelSource,
+    PostgresDemographicSource,
+)
 
 app = Flask(__name__)
 app.config.update(get_config_value("flask"))
@@ -22,7 +27,9 @@ def keyword_search():
     query = KeywordQuery.from_raw_query(request_json)
     if query is not None:
         source = CensoredSource(
-            ElasticsearchTwitterPanelSource(),
+            CompositeSource(
+                ElasticsearchTwitterPanelSource(), PostgresDemographicSource()
+            ),
             privacy_threshold=get_config_value("user_count_privacy_threshold"),
         )
         results = source.query_from_api(query, fill_zeros=True)

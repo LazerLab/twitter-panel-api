@@ -4,15 +4,15 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-import panel_api.sources as sources
 from panel_api.api_utils import KeywordQuery
 from panel_api.api_values import Demographic
+from panel_api.sources import CompositeSource, MediaSource
 
 from .utils import list_equals_ignore_order, period_equals
 
 
 @pytest.fixture
-def tweet_data():
+def raw_tweet_data():
     """
     Data entries have been truncated for brevity and my sanity. If more of the actual
     structure becomes relevent, it should be added.
@@ -41,6 +41,15 @@ def tweet_data():
 
 
 @pytest.fixture
+def tweet_data(raw_tweet_data):
+    hits = [hit.to_dict() for hit in raw_tweet_data]
+    print("HITS:", hits)
+    return pd.DataFrame(
+        [{"created_at": hit["created_at"], "userid": hit["user"]["id"]} for hit in hits]
+    )
+
+
+@pytest.fixture
 def voter_data():
     return pd.DataFrame(
         [
@@ -56,13 +65,13 @@ def voter_data():
             ("9", "CT", "Unknown", 58, "Caucasian"),
         ],
         columns=[
-            "twProfileID",
-            "vf_source_state",
-            "voterbase_gender",
-            "voterbase_age",
-            "voterbase_race",
+            "userid",
+            Demographic.STATE,
+            Demographic.GENDER,
+            Demographic.AGE,
+            Demographic.RACE,
         ],
-    ).to_dict("records")
+    )
 
 
 @pytest.fixture
@@ -108,13 +117,30 @@ def mock_voter_db(voter_data):
         yield m
 
 
-def test_es_query_daily(mock_es_search, mock_voter_db, tweet_data, voter_data):
-    mock_es_search.return_value = tweet_data
-    mock_voter_db.return_value = voter_data
-    results = sources.ElasticsearchTwitterPanelSource().query_from_api(
-        KeywordQuery("dinosaur", time_aggregation="day")
+@pytest.fixture
+def mock_twitter_source():
+    return MagicMock()
+
+
+@pytest.fixture
+def mock_demographic_source():
+    return MagicMock()
+
+
+def test_query_daily(
+    tweet_data,
+    voter_data,
+    mock_twitter_source,
+    mock_demographic_source,
+):
+    mock_twitter_source.match_keyword.return_value = tweet_data
+    mock_demographic_source.get_demographics.return_value = voter_data
+    results = CompositeSource(
+        mock_twitter_source, mock_demographic_source
+    ).query_from_api(KeywordQuery("dinosaur", time_aggregation="day"))
+    mock_twitter_source.match_keyword.assert_called_once_with(
+        keyword="dinosaur", time_range=(None, None)
     )
-    mock_es_search.assert_called_once_with("dinosaur", before=None, after=None)
 
     expected_results = [
         {
@@ -169,16 +195,24 @@ def test_es_query_daily(mock_es_search, mock_voter_db, tweet_data, voter_data):
         },
     ]
 
+    print(results)
     assert list_equals_ignore_order(expected_results, results, period_equals)
 
 
-def test_es_query_weekly(mock_es_search, mock_voter_db, tweet_data, voter_data):
-    mock_es_search.return_value = tweet_data
-    mock_voter_db.return_value = voter_data
-    results = sources.ElasticsearchTwitterPanelSource().query_from_api(
-        KeywordQuery("dinosaur", time_aggregation="week")
+def test_query_weekly(
+    tweet_data,
+    voter_data,
+    mock_twitter_source,
+    mock_demographic_source,
+):
+    mock_twitter_source.match_keyword.return_value = tweet_data
+    mock_demographic_source.get_demographics.return_value = voter_data
+    results = CompositeSource(
+        mock_twitter_source, mock_demographic_source
+    ).query_from_api(KeywordQuery("dinosaur", time_aggregation="week"))
+    mock_twitter_source.match_keyword.assert_called_once_with(
+        keyword="dinosaur", time_range=(None, None)
     )
-    mock_es_search.assert_called_once_with("dinosaur", before=None, after=None)
 
     expected_results = [
         {
@@ -221,7 +255,7 @@ def test_es_query_weekly(mock_es_search, mock_voter_db, tweet_data, voter_data):
 
 
 def test_table_group_by(voter_tweets):
-    results = sources.MediaSource.aggregate_tabular_data(
+    results = MediaSource.aggregate_tabular_data(
         voter_tweets,
         "created_at",
         time_agg="week",
