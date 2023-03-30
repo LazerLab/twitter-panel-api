@@ -138,7 +138,7 @@ def test_fill_zeros():
             "n_tweeters": 5,
             "tsmart_state": {"AL": 1, "GA": 1, "PA": 1, "MA": 1, "CT": 1},
             "voterbase_gender": {"Male": 2, "Female": 2, "Unknown": 1},
-            "vb_age_decade": {"20 - 30": 2, "30 - 40": 1, "50 - 60": 2},
+            "vb_age_decade": {"under 30": 2, "30 - 40": 1, "50 - 60": 2},
             "voterbase_race": {
                 "Caucasian": 3,
                 "Asian": 1,
@@ -168,7 +168,7 @@ def test_fill_zeros():
             ),
             "voterbase_gender": {"Male": 2, "Female": 2, "Unknown": 1},
             "vb_age_decade": (
-                pd.Series([2, 1, 2], index=["20 - 30", "30 - 40", "50 - 60"])
+                pd.Series([2, 1, 2], index=["under 30", "30 - 40", "50 - 60"])
                 .reindex(Demographic.AGE.values(), fill_value=0)
                 .to_dict()
             ),
@@ -221,7 +221,7 @@ def valid_outputs():
             {
                 "n_tweets": 1000,
                 "n_tweeters": 100,
-                "vb_age_decade": {"10 - 20": 50, "80 - 90": 50},
+                "vb_age_decade": {"under 30": 50, "70+": 50},
                 "tsmart_state": {"AL": 20, "CA": 80},
                 "voterbase_gender": {"Male": 40, "Female": 50, "Unknown": 10},
                 "voterbase_race": {
@@ -235,7 +235,7 @@ def valid_outputs():
             {
                 "n_tweets": 1000,
                 "n_tweeters": 100,
-                "vb_age_decade": {"10 - 20": 50, "80 - 90": 50},
+                "vb_age_decade": {"under 30": 50, "80 - 90": 50},
                 "tsmart_state": {"AL": 20, "CA": 80},
                 "voterbase_gender": {"Male": 40, "Female": 50, "Unknown": 10},
                 "voterbase_race": {
@@ -244,10 +244,10 @@ def valid_outputs():
                     "Hispanic": 10,
                 },
                 "groups": [
-                    {"vb_age_decade": "10 - 20", "tsmart_state": "AL", "count": 10},
-                    {"vb_age_decade": "10 - 20", "tsmart_state": "CA", "count": 40},
-                    {"vb_age_decade": "80 - 90", "tsmart_state": "AL", "count": 10},
-                    {"vb_age_decade": "80 - 90", "tsmart_state": "CA", "count": 40},
+                    {"vb_age_decade": "under 30", "tsmart_state": "AL", "count": 10},
+                    {"vb_age_decade": "under 30", "tsmart_state": "CA", "count": 40},
+                    {"vb_age_decade": "70+", "tsmart_state": "AL", "count": 10},
+                    {"vb_age_decade": "70+", "tsmart_state": "CA", "count": 40},
                 ],
             }
         ],
@@ -261,7 +261,7 @@ def invalid_outputs():
             {
                 "n_tweets": 1000,
                 "n_tweeters": 100,
-                "vb_age_decade": {"10 - 20": 50, "80 - 90": 50},
+                "vb_age_decade": {"under 30": 50, "70+": 50},
                 "tsmart_state": {"AL": 20, "CA": 80},
                 "voterbase_gender": {"Male": 40, "Female": 50, "Unknown": 10},
                 "voterbase_race": {
@@ -275,7 +275,7 @@ def invalid_outputs():
             {
                 "n_tweets": 1000,
                 "n_tweeters": 100,
-                "vb_age_decade": {"10 - 20": 50, "80 - 90": 50},
+                "vb_age_decade": {"under 30": 50, "70+": 50},
                 "tsmart_state": {"AL": 20, "CA": 80},
                 "voterbase_gender": {"Male": 40, "Female": 50, "Unknown": 10},
                 "voterbase_race": {
@@ -284,10 +284,10 @@ def invalid_outputs():
                     "Hispanic": 10,
                 },
                 "groups": [
-                    {"vb_age_decade": "10 - 20", "tsmart_state": "AL", "count": 9},
-                    {"vb_age_decade": "10 - 20", "tsmart_state": "CA", "count": 41},
-                    {"vb_age_decade": "80 - 90", "tsmart_state": "AL", "count": 11},
-                    {"vb_age_decade": "80 - 90", "tsmart_state": "CA", "count": 39},
+                    {"vb_age_decade": "under 30", "tsmart_state": "AL", "count": 9},
+                    {"vb_age_decade": "under 30", "tsmart_state": "CA", "count": 41},
+                    {"vb_age_decade": "70+", "tsmart_state": "AL", "count": 11},
+                    {"vb_age_decade": "70+", "tsmart_state": "CA", "count": 39},
                 ],
             }
         ],
@@ -295,7 +295,7 @@ def invalid_outputs():
             {
                 "n_tweets": 1000,
                 "n_tweeters": 100,
-                "vb_age_decade": {"10 - 20": 50, "80 - 90": 50},
+                "vb_age_decade": {"under 30": 50, "70+": 50},
                 "tsmart_state": {"AL": 20, "CA": 80},
                 "voterbase_gender": {"Male": 40, "Female": 50, "Unknown": 10},
                 "voterbase_race": {
@@ -304,10 +304,10 @@ def invalid_outputs():
                     "Hispanic": 9,
                 },
                 "groups": [
-                    {"vb_age_decade": "10 - 20", "tsmart_state": "AL", "count": 10},
-                    {"vb_age_decade": "10 - 20", "tsmart_state": "CA", "count": 40},
-                    {"vb_age_decade": "80 - 90", "tsmart_state": "AL", "count": 10},
-                    {"vb_age_decade": "80 - 90", "tsmart_state": "CA", "count": 40},
+                    {"vb_age_decade": "under 30", "tsmart_state": "AL", "count": 10},
+                    {"vb_age_decade": "under 30", "tsmart_state": "CA", "count": 40},
+                    {"vb_age_decade": "70+", "tsmart_state": "AL", "count": 10},
+                    {"vb_age_decade": "70+", "tsmart_state": "CA", "count": 40},
                 ],
             }
         ],
@@ -315,7 +315,7 @@ def invalid_outputs():
             {
                 "n_tweets": 1000,
                 "n_tweeters": 100,
-                "vb_age_decade": {"10 - 20": 50, "80 - 90": 50},
+                "vb_age_decade": {"under 30": 50, "70+": 50},
                 "tsmart_state": {"AL": 20, "CA": 80},
                 "voterbase_gender": {"Male": 40, "Female": 50, "Unknown": 10},
                 "voterbase_race": {
@@ -327,7 +327,7 @@ def invalid_outputs():
             {
                 "n_tweets": 1000,
                 "n_tweeters": 100,
-                "vb_age_decade": {"10 - 20": 50, "80 - 90": 50},
+                "vb_age_decade": {"under 30": 50, "70+": 50},
                 "tsmart_state": {"AL": 20, "CA": 80},
                 "voterbase_gender": {"Male": 40, "Female": 50, "Unknown": 10},
                 "voterbase_race": {
@@ -341,7 +341,7 @@ def invalid_outputs():
             {
                 "n_tweets": 1000,
                 "n_tweeters": 100,
-                "vb_age_decade": {"10 - 20": 50, "80 - 90": 50},
+                "vb_age_decade": {"under 30": 50, "70+": 50},
                 "tsmart_state": {"AL": 20, "CA": 80},
                 "voterbase_gender": {"Male": 40, "Female": 50, "Unknown": 10},
                 "voterbase_race": {
@@ -350,10 +350,10 @@ def invalid_outputs():
                     "Hispanic": 10,
                 },
                 "groups": [
-                    {"vb_age_decade": "10 - 20", "tsmart_state": "AL", "count": 10},
-                    {"vb_age_decade": "10 - 20", "tsmart_state": "CA", "count": 40},
-                    {"vb_age_decade": "80 - 90", "tsmart_state": "AL", "count": 10},
-                    {"vb_age_decade": "80 - 90", "tsmart_state": "CA", "count": 40},
+                    {"vb_age_decade": "under 30", "tsmart_state": "AL", "count": 10},
+                    {"vb_age_decade": "under 30", "tsmart_state": "CA", "count": 40},
+                    {"vb_age_decade": "70+", "tsmart_state": "AL", "count": 10},
+                    {"vb_age_decade": "70+", "tsmart_state": "CA", "count": 40},
                 ],
             },
             {
@@ -368,10 +368,10 @@ def invalid_outputs():
                     "Hispanic": 10,
                 },
                 "groups": [
-                    {"vb_age_decade": "10 - 20", "tsmart_state": "AL", "count": 9},
-                    {"vb_age_decade": "10 - 20", "tsmart_state": "CA", "count": 41},
-                    {"vb_age_decade": "80 - 90", "tsmart_state": "AL", "count": 11},
-                    {"vb_age_decade": "80 - 90", "tsmart_state": "CA", "count": 39},
+                    {"vb_age_decade": "under 30", "tsmart_state": "AL", "count": 9},
+                    {"vb_age_decade": "under 30", "tsmart_state": "CA", "count": 41},
+                    {"vb_age_decade": "70+", "tsmart_state": "AL", "count": 11},
+                    {"vb_age_decade": "70+", "tsmart_state": "CA", "count": 39},
                 ],
             },
         ],
