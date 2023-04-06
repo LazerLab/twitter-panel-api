@@ -23,7 +23,7 @@ def collect_voters(
     collect_voters_command = """
     SELECT voters.data
     FROM voters INNER JOIN temp
-    ON voters.twProfileID=temp.id
+    ON voters.userid=temp.id
     """
 
     conn = postgresql_connection()
