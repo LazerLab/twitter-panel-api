@@ -2,6 +2,32 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.0 (2023-04-06)
+### Feature
+* Combine age buckets at extremes ([#19](https://github.com/LazerLab/twitter-panel-api/issues/19)) ([`dcbec2c`](https://github.com/LazerLab/twitter-panel-api/commit/dcbec2cb1dfb2a1ae2b890202cfd64af0e5bcd3c))
+
+### Fix
+* Remove Elasticsearch https requirement ([#22](https://github.com/LazerLab/twitter-panel-api/issues/22)) ([`3527698`](https://github.com/LazerLab/twitter-panel-api/commit/3527698fdd2145fedee6b27d263fa56f67093d73))
+
+### Breaking
+* Combine age buckets at extremes ([#19](https://github.com/LazerLab/twitter-panel-api/issues/19)) ([`dcbec2c`](https://github.com/LazerLab/twitter-panel-api/commit/dcbec2cb1dfb2a1ae2b890202cfd64af0e5bcd3c))
+
+### Documentation
+* Update example query to include date range ([`0518ec9`](https://github.com/LazerLab/twitter-panel-api/commit/0518ec92bccac2093e312c0ed17b6d7093be076e))
+
+## v0.3.0 (2023-04-06)
+### Feature
+* Combine age buckets at extremes ([#19](https://github.com/LazerLab/twitter-panel-api/issues/19)) ([`dcbec2c`](https://github.com/LazerLab/twitter-panel-api/commit/dcbec2cb1dfb2a1ae2b890202cfd64af0e5bcd3c))
+
+### Fix
+* Remove Elasticsearch https requirement ([#22](https://github.com/LazerLab/twitter-panel-api/issues/22)) ([`3527698`](https://github.com/LazerLab/twitter-panel-api/commit/3527698fdd2145fedee6b27d263fa56f67093d73))
+
+### Breaking
+* Combine age buckets at extremes ([#19](https://github.com/LazerLab/twitter-panel-api/issues/19)) ([`dcbec2c`](https://github.com/LazerLab/twitter-panel-api/commit/dcbec2cb1dfb2a1ae2b890202cfd64af0e5bcd3c))
+
+### Documentation
+* Update example query to include date range ([`0518ec9`](https://github.com/LazerLab/twitter-panel-api/commit/0518ec92bccac2093e312c0ed17b6d7093be076e))
+
 ## v0.2.0 (2023-03-30)
 ### Breaking
 * Separate sources of tweets and demographics ([#17](https://github.com/LazerLab/twitter-panel-api/issues/17)) ([`15fc026`](https://github.com/LazerLab/twitter-panel-api/commit/15fc026335851a39b164d2c8f730dd2ea7c2fb3f))
