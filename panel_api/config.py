@@ -10,8 +10,7 @@ _default_config = {
     "cross_sections_limit": 2,
     "flask": {"SECRET_KEY": "flask_secret_key"},
     "elasticsearch": {
-        "hosts": [{"host": "localhost", "port": 9200}],
-        "http_auth": ("elastic", "password"),
+        "hosts": ["https://elastic:password@localhost:9200/"],
     },
     "postgresql": {
         "host": "localhost",
