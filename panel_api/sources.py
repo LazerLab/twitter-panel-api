@@ -9,12 +9,7 @@ import pandas as pd
 
 from panel_api import api_utils
 
-from .api_utils import (
-    KeywordQuery,
-    categorize_age,
-    censor_keyword_search_output,
-    int_or_nan,
-)
+from .api_utils import KeywordQuery, categorize_age, censor_keyword_search_output
 from .api_values import Demographic, TimeAggregation
 from .es_utils import elastic_query_for_keyword
 from .sql_utils import collect_voters
@@ -204,7 +199,7 @@ class ElasticsearchTwitterPanelSource(TwitterSource):
         # otherwise we make a dataframe
         res_df = pd.DataFrame(results)
 
-        res_df["userid"] = res_df["user"].apply(lambda u: int_or_nan(u["id"]))
+        res_df["userid"] = str(res_df["user"]["id"])
 
         return res_df
 
