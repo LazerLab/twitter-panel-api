@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.1 (2023-04-07)
+### Fix
+* Properly extract id from user column ([#26](https://github.com/LazerLab/twitter-panel-api/issues/26)) ([`1521f6c`](https://github.com/LazerLab/twitter-panel-api/commit/1521f6c648da6653332d8fb1b5f0836ecb149afb))
+
 ## v0.4.0 (2023-04-07)
 ### Breaking
 * Remove capitalization from SQL database id column ([#23](https://github.com/LazerLab/twitter-panel-api/issues/23)) ([`fdad85b`](https://github.com/LazerLab/twitter-panel-api/commit/fdad85b78d48a08e787f2f976d1478de1fd6f05a))
