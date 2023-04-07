@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.0 (2023-04-07)
+### Breaking
+* Remove capitalization from SQL database id column ([#23](https://github.com/LazerLab/twitter-panel-api/issues/23)) ([`fdad85b`](https://github.com/LazerLab/twitter-panel-api/commit/fdad85b78d48a08e787f2f976d1478de1fd6f05a))
+
 ## v0.3.0 (2023-04-06)
 ### Feature
 * Combine age buckets at extremes ([#19](https://github.com/LazerLab/twitter-panel-api/issues/19)) ([`dcbec2c`](https://github.com/LazerLab/twitter-panel-api/commit/dcbec2cb1dfb2a1ae2b890202cfd64af0e5bcd3c))
