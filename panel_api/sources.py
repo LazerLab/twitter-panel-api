@@ -199,7 +199,7 @@ class ElasticsearchTwitterPanelSource(TwitterSource):
         # otherwise we make a dataframe
         res_df = pd.DataFrame(results)
 
-        res_df["userid"] = str(res_df["user"]["id"])
+        res_df["userid"] = res_df["user"].apply(lambda u: str(u["id"]))
 
         return res_df
 
