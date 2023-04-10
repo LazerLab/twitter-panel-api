@@ -5,10 +5,25 @@ import pandas as pd
 import pytest
 
 from panel_api import api_utils
-from panel_api.api_utils import KeywordQuery
+from panel_api.api_utils import KeywordQuery, demographic_from_name
 from panel_api.api_values import Demographic
 
 from .utils import list_equals_ignore_order, period_equals
+
+
+def test_demographic_from_name():
+    tests = {
+        "race": Demographic.RACE,
+        "voterbase_race": Demographic.RACE,
+        "gender": Demographic.GENDER,
+        "voterbase_gender": Demographic.GENDER,
+        "state": Demographic.STATE,
+        "tsmart_state": Demographic.STATE,
+        "age": Demographic.AGE,
+        "vb_age_decade": Demographic.AGE,
+    }
+    for name, dem in tests.items():
+        assert demographic_from_name(name) == dem
 
 
 def test_parse_query_valid():
@@ -76,7 +91,7 @@ def test_parse_query_invalid():
         {
             "keyword_query": "key word",
             "time_agg": "week",
-            "cross_sections": ["age", "v_gender"],
+            "cross_sections": ["age", "gender"],
         },  # Invalid demographic
         {
             "keyword_query": "keyword",
