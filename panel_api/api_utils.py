@@ -196,7 +196,7 @@ def censor_keyword_search_output(
     return response_data
 
 
-def demographic_from_name(name) -> Demographic | None:
+def demographic_from_name(name: str) -> Demographic:
     """
     Translate human-readable names for demographics to the Demographic enumeration.
     """
@@ -208,7 +208,7 @@ def demographic_from_name(name) -> Demographic | None:
         return Demographic.AGE
     if name in [str(Demographic.STATE), "state"]:
         return Demographic.STATE
-    return None
+    raise ValueError(f"Name '{name}' is not a recognized demographic")
 
 
 def fill_zeros(results):
