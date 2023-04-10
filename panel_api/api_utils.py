@@ -3,7 +3,7 @@ Module for API-specific utilities.
 """
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from typing import Any, Iterable, Mapping, Optional, Tuple
 
 import numpy as np
@@ -110,7 +110,7 @@ class KeywordQuery:
 
 def parse_api_date(date_string: str) -> date:
     """Parse this API's date string format to a date object."""
-    return datetime.strptime(date_string, "%Y-%m-%d").date()
+    return date.fromisoformat(date_string)
 
 
 def validate_keyword_search_output(
