@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "panel_api"
-version = "0.4.1"
+version = "0.4.2"
 readme = "README.md"
 
 [tool.setuptools.packages.find]

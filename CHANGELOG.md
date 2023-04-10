@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.2 (2023-04-10)
+### Fix
+* Raise error on failure for demographic_from_name ([#28](https://github.com/LazerLab/twitter-panel-api/issues/28)) ([`760f157`](https://github.com/LazerLab/twitter-panel-api/commit/760f157143fb7e23f47400240351deccbda32a38))
+
 ## v0.4.1 (2023-04-07)
 ### Fix
 * Properly extract id from user column ([#26](https://github.com/LazerLab/twitter-panel-api/issues/26)) ([`1521f6c`](https://github.com/LazerLab/twitter-panel-api/commit/1521f6c648da6653332d8fb1b5f0836ecb149afb))
