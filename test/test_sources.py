@@ -5,103 +5,11 @@ import pandas as pd
 import pytest
 
 from panel_api.api_utils import KeywordQuery
-from panel_api.api_values import Demographic
+from panel_api.api_values import Demographic, TimeAggregation
 from panel_api.sources import CompositeSource, MediaSource
 
+from .fixtures.data import tweet_data, tweet_voter_data, voter_data  # noqa: F401
 from .utils import list_equals_ignore_order, period_equals
-
-
-@pytest.fixture
-def raw_tweet_data():
-    """
-    Data entries have been truncated for brevity and my sanity. If more of the actual
-    structure becomes relevent, it should be added.
-    """
-    data = [
-        {"created_at": "2023-02-17", "user": {"id": "0"}},
-        {"created_at": "2023-02-17", "user": {"id": "1"}},
-        {"created_at": "2023-02-19", "user": {"id": "2"}},
-        {"created_at": "2023-02-19", "user": {"id": "3"}},
-        {"created_at": "2023-02-19", "user": {"id": "9"}},
-        {"created_at": "2023-02-20", "user": {"id": "4"}},
-        {"created_at": "2023-02-21", "user": {"id": "5"}},
-        {"created_at": "2023-02-21", "user": {"id": "6"}},
-        {"created_at": "2023-02-21", "user": {"id": "7"}},
-        {"created_at": "2023-02-21", "user": {"id": "8"}},
-        {"created_at": "2023-02-21", "user": {"id": "9"}},
-        {"created_at": "2023-02-21", "user": {"id": "9"}},
-        {"created_at": "2023-02-22", "user": {"id": "9"}},
-    ]
-    hits_mock = []
-    for entry in data:
-        m = MagicMock()
-        m.to_dict = MagicMock(return_value=entry)
-        hits_mock.append(m)
-    return hits_mock
-
-
-@pytest.fixture
-def tweet_data(raw_tweet_data):
-    hits = [hit.to_dict() for hit in raw_tweet_data]
-    print("HITS:", hits)
-    return pd.DataFrame(
-        [{"created_at": hit["created_at"], "userid": hit["user"]["id"]} for hit in hits]
-    )
-
-
-@pytest.fixture
-def voter_data():
-    return pd.DataFrame(
-        [
-            ("0", "AL", "Male", 20, "Caucasian"),
-            ("1", "GA", "Female", 21, "Uncoded"),
-            ("2", "PA", "Male", 30, "Caucasian"),
-            ("3", "MA", "Female", 55, "Asian"),
-            ("4", "MA", "Male", 72, "African-American"),
-            ("5", "IA", "Female", 147, "Hispanic"),
-            ("6", "IL", "Male", 47, "Caucasian"),
-            ("7", "CO", "Female", 32, "Native American"),
-            ("8", "KS", "Male", 43, "Uncoded"),
-            ("9", "CT", "Unknown", 58, "Caucasian"),
-        ],
-        columns=[
-            "userid",
-            Demographic.STATE,
-            Demographic.GENDER,
-            Demographic.AGE,
-            Demographic.RACE,
-        ],
-    )
-
-
-@pytest.fixture
-def voter_tweets():
-    return pd.DataFrame(
-        [
-            ("2023-02-17", "0", "0", "AL", "Male", 20, "Caucasian"),
-            ("2023-02-17", "1", "1", "GA", "Female", 21, "Uncoded"),
-            ("2023-02-19", "2", "2", "PA", "Male", 30, "Caucasian"),
-            ("2023-02-19", "3", "3", "MA", "Female", 55, "Asian"),
-            ("2023-02-19", "9", "9", "CT", "Unknown", 58, "Caucasian"),
-            ("2023-02-20", "4", "4", "MA", "Male", 72, "African-American"),
-            ("2023-02-21", "5", "5", "IA", "Female", 147, "Hispanic"),
-            ("2023-02-21", "6", "6", "IL", "Male", 47, "Caucasian"),
-            ("2023-02-21", "7", "7", "CO", "Female", 32, "Native American"),
-            ("2023-02-21", "8", "8", "KS", "Male", 43, "Uncoded"),
-            ("2023-02-21", "9", "9", "CT", "Unknown", 58, "Caucasian"),
-            ("2023-02-21", "9", "9", "CT", "Unknown", 58, "Caucasian"),
-            ("2023-02-22", "9", "9", "CT", "Unknown", 58, "Caucasian"),
-        ],
-        columns=[
-            "created_at",
-            "userid",
-            "twProfileID",
-            Demographic.STATE,
-            Demographic.GENDER,
-            Demographic.AGE,
-            Demographic.RACE,
-        ],
-    )
 
 
 @pytest.fixture
@@ -110,10 +18,9 @@ def mock_es_search():
         yield m
 
 
-@pytest.fixture
 def mock_voter_db(voter_data):
     with patch("panel_api.sources.collect_voters") as m:
-        m.return_value = voter_data
+        m.return_value = pd.DataFrame(voter_data)
         yield m
 
 
@@ -134,10 +41,10 @@ def test_query_daily(
     mock_demographic_source,
 ):
     mock_twitter_source.match_keyword.return_value = tweet_data
-    mock_demographic_source.get_demographics.return_value = voter_data
+    mock_demographic_source.get_demographics.return_value = pd.DataFrame(voter_data)
     results = CompositeSource(
         mock_twitter_source, mock_demographic_source
-    ).query_from_api(KeywordQuery("dinosaur", time_aggregation="day"))
+    ).query_from_api(KeywordQuery("dinosaur", time_aggregation=TimeAggregation.DAY))
     mock_twitter_source.match_keyword.assert_called_once_with(
         keyword="dinosaur", time_range=(None, None)
     )
@@ -206,10 +113,10 @@ def test_query_weekly(
     mock_demographic_source,
 ):
     mock_twitter_source.match_keyword.return_value = tweet_data
-    mock_demographic_source.get_demographics.return_value = voter_data
+    mock_demographic_source.get_demographics.return_value = pd.DataFrame(voter_data)
     results = CompositeSource(
         mock_twitter_source, mock_demographic_source
-    ).query_from_api(KeywordQuery("dinosaur", time_aggregation="week"))
+    ).query_from_api(KeywordQuery("dinosaur", time_aggregation=TimeAggregation.WEEK))
     mock_twitter_source.match_keyword.assert_called_once_with(
         keyword="dinosaur", time_range=(None, None)
     )
@@ -253,12 +160,12 @@ def test_query_weekly(
     assert list_equals_ignore_order(expected_results, results, period_equals)
 
 
-def test_table_group_by(voter_tweets):
+def test_table_group_by(tweet_voter_data):
     results = MediaSource.aggregate_tabular_data(
-        voter_tweets,
+        tweet_voter_data,
         "created_at",
-        time_agg="week",
-        group_by=["voterbase_race", "voterbase_gender"],
+        time_agg=TimeAggregation.WEEK,
+        group_by=[Demographic.RACE, Demographic.GENDER],
     )
 
     expected_results = [
