@@ -1,191 +1,80 @@
-from datetime import datetime
+import copy
+from typing import Any, Iterable, Mapping
 
-import pandas as pd
 import pytest
 
-from panel_api import api_utils
-from panel_api.api_utils import KeywordQuery, demographic_from_name
 from panel_api.api_values import Demographic
-
-from .utils import list_equals_ignore_order, period_equals
-
-
-def test_demographic_from_name():
-    tests = {
-        "race": Demographic.RACE,
-        "voterbase_race": Demographic.RACE,
-        "gender": Demographic.GENDER,
-        "voterbase_gender": Demographic.GENDER,
-        "state": Demographic.STATE,
-        "tsmart_state": Demographic.STATE,
-        "age": Demographic.AGE,
-        "vb_age_decade": Demographic.AGE,
-    }
-    for name, dem in tests.items():
-        assert demographic_from_name(name) == dem
+from panel_api.sources import CensoredSource
 
 
-def test_parse_query_valid():
-    valid_inputs = [
-        {"keyword_query": "keyword", "aggregate_time_period": "day"},
-        {
-            "keyword_query": "keyword",
-            "aggregate_time_period": "week",
-        },
-        {
-            "keyword_query": "key word",
-            "aggregate_time_period": "day",
-            "cross_sections": [
-                "voterbase_race",
-                "tsmart_state",
-            ],
-        },
-        {
-            "keyword_query": "keyword",
-            "aggregate_time_period": "day",
-            "after": "2019-01-01",
-        },
-        {
-            "keyword_query": "keyword",
-            "aggregate_time_period": "day",
-            "before": "2019-01-01",
-        },
-        {
-            "keyword_query": "keyword",
-            "aggregate_time_period": "day",
-            "after": "2019-01-01",
-            "before": "2020-01-01",
-        },
-    ]
-
-    parsed_queries = [KeywordQuery.from_raw_query(input) for input in valid_inputs]
-    expected_queries = [
-        KeywordQuery("keyword", "day"),
-        KeywordQuery("keyword", "week"),
-        KeywordQuery(
-            "key word",
-            "day",
-            cross_sections=[
-                Demographic.RACE,
-                Demographic.STATE,
-            ],
-        ),
-    ]
-
-    for expected, actual in zip(expected_queries, parsed_queries):
-        assert expected == actual
+def validate_keyword_search_output(
+    response_data: Iterable[Mapping[str, Any]], privacy_threshold: int
+) -> bool:
+    """
+    Check whether output respects a certain privacy threshold.
+    """
+    for period in response_data:
+        if "groups" in period:
+            if any(
+                (
+                    group["count"] < privacy_threshold
+                    for group in period["groups"]
+                    if group["count"] is not None
+                )
+            ):
+                return False
+        if any(
+            (
+                any(
+                    count < privacy_threshold
+                    for count in period[dem].values()
+                    if count is not None
+                )
+                for dem in [*Demographic]
+            )
+        ):
+            return False
+    return True
 
 
-def test_parse_query_invalid():
-    invalid_inputs = [
-        {"keyword_query": None, "aggregate_time_period": "day"},  # Missing search query
-        {
-            "keyword_query": "keyword",
-            "aggregate_time_period": "dy",
-        },  # Invalid time aggregation
-        {
-            "keyword_query": "keyword",
-            "aggregate_time_period": None,
-        },  # Missing time aggregation
-        {
-            "keyword_query": "key word",
-            "time_agg": "week",
-            "cross_sections": ["age", "gender"],
-        },  # Invalid demographic
-        {
-            "keyword_query": "keyword",
-            "time_agg": "day",
-            "after": "2020-10-10",
-            "before": "2020-10-01",
-        },  # Invalid time range
-    ]
+def test_keyword_search_output_valid(valid_outputs):
+    privacy_threshold = 10
 
-    for input in invalid_inputs:
-        assert KeywordQuery.from_raw_query(input) is None
+    for output in valid_outputs:
+        assert validate_keyword_search_output(output, privacy_threshold)
 
 
-def test_fill_zeros():
-    sparse_results = [
-        {
-            "ts": datetime(2023, 2, 13),
-            "n_tweets": 5,
-            "n_tweeters": 5,
-            "tsmart_state": {"AL": 1, "GA": 1, "PA": 1, "MA": 1, "CT": 1},
-            "voterbase_gender": {"Male": 2, "Female": 2, "Unknown": 1},
-            "vb_age_decade": {"under 30": 2, "30 - 40": 1, "50 - 60": 2},
-            "voterbase_race": {
-                "Caucasian": 3,
-                "Asian": 1,
-                "Uncoded": 1,
-            },
-            "groups": [
-                {"voterbase_race": "Caucasian", "voterbase_gender": "Male", "count": 2},
-                {"voterbase_race": "Asian", "voterbase_gender": "Female", "count": 1},
-                {"voterbase_race": "Uncoded", "voterbase_gender": "Female", "count": 1},
-                {
-                    "voterbase_race": "Caucasian",
-                    "voterbase_gender": "Unknown",
-                    "count": 1,
-                },
-            ],
-        },
-    ]
-    expected_results = [
-        {
-            "ts": datetime(2023, 2, 13),
-            "n_tweets": 5,
-            "n_tweeters": 5,
-            "tsmart_state": (
-                pd.Series([1, 1, 1, 1, 1], index=["AL", "GA", "PA", "MA", "CT"])
-                .reindex(Demographic.STATE.values(), fill_value=0)
-                .to_dict()
-            ),
-            "voterbase_gender": {"Male": 2, "Female": 2, "Unknown": 1},
-            "vb_age_decade": (
-                pd.Series([2, 1, 2], index=["under 30", "30 - 40", "50 - 60"])
-                .reindex(Demographic.AGE.values(), fill_value=0)
-                .to_dict()
-            ),
-            "voterbase_race": {
-                "Caucasian": 3,
-                "Asian": 1,
-                "Uncoded": 1,
-                "African-American": 0,
-                "Hispanic": 0,
-                "Other": 0,
-                "Native American": 0,
-            },
-            "groups": pd.DataFrame(
-                [
-                    ("Caucasian", "Male", 2),
-                    ("Asian", "Female", 1),
-                    ("Uncoded", "Female", 1),
-                    ("Caucasian", "Unknown", 1),
-                    ("Caucasian", "Female", 0),
-                    ("African-American", "Female", 0),
-                    ("African-American", "Male", 0),
-                    ("African-American", "Unknown", 0),
-                    ("Hispanic", "Female", 0),
-                    ("Hispanic", "Male", 0),
-                    ("Hispanic", "Unknown", 0),
-                    ("Uncoded", "Male", 0),
-                    ("Uncoded", "Unknown", 0),
-                    ("Asian", "Male", 0),
-                    ("Asian", "Unknown", 0),
-                    ("Other", "Female", 0),
-                    ("Other", "Male", 0),
-                    ("Other", "Unknown", 0),
-                    ("Native American", "Female", 0),
-                    ("Native American", "Male", 0),
-                    ("Native American", "Unknown", 0),
-                ],
-                columns=[Demographic.RACE, Demographic.GENDER, "count"],
-            ).to_dict("records"),
-        },
-    ]
-    filled_results = api_utils.fill_zeros(sparse_results)
+def test_keyword_search_output_invalid(invalid_outputs):
+    privacy_threshold = 10
 
-    assert list_equals_ignore_order(expected_results, filled_results, period_equals)
+    for output in invalid_outputs:
+        assert not validate_keyword_search_output(output, privacy_threshold)
+
+
+def test_keyword_search_censor_output(valid_outputs, invalid_outputs):
+    privacy_threshold = 10
+
+    for output in valid_outputs:
+        assert output == CensoredSource.censor_keyword_search_output(
+            copy.deepcopy(output), 10, remove_censored_values=True
+        )
+        assert output == CensoredSource.censor_keyword_search_output(
+            copy.deepcopy(output), 10, remove_censored_values=False
+        )
+
+    for output in invalid_outputs:
+        validated_output_removed = CensoredSource.censor_keyword_search_output(
+            copy.deepcopy(output), privacy_threshold, remove_censored_values=True
+        )
+        validated_output_replaced = CensoredSource.censor_keyword_search_output(
+            copy.deepcopy(output), privacy_threshold, remove_censored_values=False
+        )
+        assert validate_keyword_search_output(
+            validated_output_removed, privacy_threshold
+        )
+        assert validate_keyword_search_output(
+            validated_output_replaced, privacy_threshold
+        )
 
 
 @pytest.fixture

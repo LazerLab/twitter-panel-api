@@ -3,22 +3,19 @@ Module for managing database connections for the application.
 """
 import psycopg2
 from elasticsearch import Elasticsearch
+from flask import current_app
 from psycopg2 import extensions
 
-from .config import get_config_value
 
-
-def elasticsearch_connection(**kwargs) -> Elasticsearch:
-    """Provide a connection to the Elasticsearch database."""
-    if not kwargs:
-        kwargs = get_config_value("elasticsearch")
-    es_handle = Elasticsearch(**kwargs)
+def elasticsearch_connection() -> Elasticsearch:
+    """Provide a connection to the Elasticsearch cluster."""
+    host = current_app.config.get("ELASTICSEARCH_URL")
+    es_handle = Elasticsearch([host])
     return es_handle
 
 
-def postgresql_connection(**kwargs) -> extensions.connection:
+def postgresql_connection() -> extensions.connection:
     """Provide a connection to the PostgreSQL database."""
-    if not kwargs:
-        kwargs = get_config_value("postgresql")
-    conn: extensions.connection = psycopg2.connect(**kwargs)
+    url = current_app.config.get("DATABASE_URL")
+    conn: extensions.connection = psycopg2.connect(url)
     return conn

@@ -1,10 +1,9 @@
 """
 Main Flask application endpoints file. Creates the Flask app on import.
 """
-from flask import Blueprint, request
+from flask import Blueprint, current_app, request
 
 from .api_utils import KeywordQuery
-from .config import get_config_value
 from .sources import (
     CensoredSource,
     CompositeSource,
@@ -23,13 +22,15 @@ def keyword_search():
     """
     message = "unknown error"
     request_json = request.get_json()
-    query = KeywordQuery.from_raw_query(request_json)
+    query = KeywordQuery.from_raw_query(
+        request_json, max_cross_sections=current_app.config.get("MAX_CROSS_SECTIONS")
+    )
     if query is not None:
         source = CensoredSource(
             CompositeSource(
                 ElasticsearchTwitterPanelSource(), PostgresDemographicSource()
             ),
-            privacy_threshold=get_config_value("user_count_privacy_threshold"),
+            privacy_threshold=current_app.config["MIN_DISPLAYED_USERS"],
         )
         results = source.query_from_api(query, fill_zeros=True)
         return {"query": request_json, "response_data": results}
