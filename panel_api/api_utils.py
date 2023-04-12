@@ -4,12 +4,11 @@ Module for API-specific utilities.
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import Any, Iterable, Mapping, Optional, Tuple
+from typing import Iterable, Mapping, Optional, Tuple
 
 import numpy as np
 
 from .api_values import Demographic, TimeAggregation
-from .config import get_config_value
 from .data_utils import fill_record_counts, fill_value_counts
 from .helpers import if_present
 
@@ -38,16 +37,19 @@ class KeywordQuery:
         time_aggregation: TimeAggregation,
         cross_sections: Optional[Iterable[Demographic]] = None,
         time_range: Tuple[Optional[date], Optional[date]] = (None, None),
+        max_cross_sections: Optional[int] = None,
     ):
         self.keyword = keyword
         self.time_aggregation = TimeAggregation(time_aggregation)
         self.cross_sections = [*cross_sections] if cross_sections else []
         self.time_range = time_range
-        if not self.validate():
+        if not self.validate(max_cross_sections):
             raise ValueError()
 
     @staticmethod
-    def from_raw_query(raw_query: Mapping) -> Optional[KeywordQuery]:
+    def from_raw_query(
+        raw_query: Mapping, max_cross_sections: Optional[int] = None
+    ) -> Optional[KeywordQuery]:
         """
         Try to create a KeywordQuery from an API query dict. Returns None on failure.
         """
@@ -70,12 +72,13 @@ class KeywordQuery:
                     time_aggregation=agg_by,
                     cross_sections=group_by,
                     time_range=time_range,
+                    max_cross_sections=max_cross_sections,
                 )
             except ValueError:
                 return None
         return None
 
-    def validate(self) -> bool:
+    def validate(self, max_cross_sections: Optional[int] = None) -> bool:
         """
         for the keyword_search endpoint, validate the two inputs from the user.
         search_query should be a string of length greater than 1,
@@ -87,7 +90,10 @@ class KeywordQuery:
         if self.time_aggregation not in TimeAggregation:
             return False
         if self.cross_sections and (
-            len(self.cross_sections) > get_config_value("cross_sections_limit")
+            (
+                max_cross_sections is not None
+                and len(self.cross_sections) > max_cross_sections
+            )
             or len(self.cross_sections) > len(set(self.cross_sections))
             or any((d not in [*Demographic] for d in self.cross_sections))
         ):
@@ -111,89 +117,6 @@ class KeywordQuery:
 def parse_api_date(date_string: str) -> date:
     """Parse this API's date string format to a date object."""
     return date.fromisoformat(date_string)
-
-
-def validate_keyword_search_output(
-    response_data: Iterable[Mapping[str, Any]], privacy_threshold: int = -1
-) -> bool:
-    """
-    Check whether returned aggregate results are reasonably protective of privacy.
-    Specifically, this function ensures no returned demographic counts are below the
-    given privacy threshold. If no threshold is given, then
-    USER_COUNT_PRIVACY_THRESHOLD will be used.
-    """
-    if privacy_threshold < 0:
-        privacy_threshold = get_config_value("user_count_privacy_threshold")
-
-    for period in response_data:
-        if "groups" in period:
-            if any(
-                (
-                    group["count"] < privacy_threshold
-                    for group in period["groups"]
-                    if group["count"] is not None
-                )
-            ):
-                return False
-        if any(
-            (
-                any(
-                    count < privacy_threshold
-                    for count in period[dem].values()
-                    if count is not None
-                )
-                for dem in [*Demographic]
-            )
-        ):
-            return False
-    return True
-
-
-def censor_keyword_search_output(
-    response_data: Iterable[dict[str, Any]],
-    privacy_threshold: int = -1,
-    remove_censored_values=True,
-) -> Iterable[Mapping[str, Any]]:
-    """
-    Enforce that returned aggregate result counts must equal or exceed the privacy
-    threshold. If no threshold is given, then USER_COUNT_PRIVACY_THRESHOLD will be
-    used from the config.
-
-    Note: This mutates the provided response_data
-    """
-    if privacy_threshold < 0:
-        privacy_threshold = get_config_value("user_count_privacy_threshold")
-
-    if remove_censored_values:
-        for period in response_data:
-            if "groups" in period:
-                period["groups"] = [
-                    *filter(
-                        lambda group: group["count"] >= privacy_threshold,
-                        period["groups"],
-                    )
-                ]
-            for dem in [*Demographic]:
-                period[dem] = {
-                    category: count
-                    for category, count in period[dem].items()
-                    if count >= privacy_threshold
-                }
-    else:
-        for period in response_data:
-            if "groups" in period:
-                groups = period["groups"]
-                period["groups"] = []
-                for group in groups:
-                    if group["count"] < privacy_threshold:
-                        group["count"] = None
-                    period["groups"].append(group)
-            for dem in [*Demographic]:
-                period[dem] = {
-                    category: count if count >= privacy_threshold else None
-                    for category, count in period[dem].items()
-                }
-    return response_data
 
 
 def demographic_from_name(name: str) -> Demographic:

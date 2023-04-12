@@ -11,8 +11,7 @@ from panel_api.api_values import Demographic
 
 @pytest.fixture
 def app():
-    test_app = create_app()
-    test_app.config.update({"TESTING": True})
+    test_app = create_app(TESTING=True)
 
     yield test_app
 

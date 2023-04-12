@@ -3,13 +3,13 @@ Module containing classes for backend data sources.
 """
 from abc import ABC, abstractmethod
 from datetime import date
-from typing import Collection, Optional, Tuple, Union
+from typing import Any, Collection, Iterable, Mapping, Optional, Tuple, Union
 
 import pandas as pd
 
 from panel_api import api_utils
 
-from .api_utils import KeywordQuery, categorize_age, censor_keyword_search_output
+from .api_utils import KeywordQuery, categorize_age
 from .api_values import Demographic, TimeAggregation
 from .es_utils import elastic_query_for_keyword
 from .sql_utils import collect_voters
@@ -172,11 +172,55 @@ class CensoredSource(MediaSource):
         self.privacy_threshold = privacy_threshold
 
     def query_from_api(self, query: KeywordQuery, fill_zeros=False, **kwargs):
-        return censor_keyword_search_output(
+        return CensoredSource.censor_keyword_search_output(
             self.source.query_from_api(query, fill_zeros, **kwargs),
             self.privacy_threshold,
             remove_censored_values=not fill_zeros,
         )
+
+    @staticmethod
+    def censor_keyword_search_output(
+        response_data: Iterable[dict[str, Any]],
+        privacy_threshold: int = 0,
+        remove_censored_values=True,
+    ) -> Iterable[Mapping[str, Any]]:
+        """
+        Enforce that returned aggregate result counts must equal or exceed the privacy
+        threshold. If no threshold is given, then USER_COUNT_PRIVACY_THRESHOLD will be
+        used from the config.
+
+        Note: This mutates the provided response_data
+        """
+        if remove_censored_values:
+            for period in response_data:
+                if "groups" in period:
+                    period["groups"] = [
+                        *filter(
+                            lambda group: group["count"] >= privacy_threshold,
+                            period["groups"],
+                        )
+                    ]
+                for dem in [*Demographic]:
+                    period[dem] = {
+                        category: count
+                        for category, count in period[dem].items()
+                        if count >= privacy_threshold
+                    }
+        else:
+            for period in response_data:
+                if "groups" in period:
+                    groups = period["groups"]
+                    period["groups"] = []
+                    for group in groups:
+                        if group["count"] < privacy_threshold:
+                            group["count"] = None
+                        period["groups"].append(group)
+                for dem in [*Demographic]:
+                    period[dem] = {
+                        category: count if count >= privacy_threshold else None
+                        for category, count in period[dem].items()
+                    }
+        return response_data
 
 
 class ElasticsearchTwitterPanelSource(TwitterSource):
