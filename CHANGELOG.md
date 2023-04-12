@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.0 (2023-04-12)
+### Feature
+* Simplify config file format and handling ([#33](https://github.com/LazerLab/twitter-panel-api/issues/33)) ([`6fa3023`](https://github.com/LazerLab/twitter-panel-api/commit/6fa3023383e9df9afb8351c6d6173d8068934396))
+
+### Breaking
+* Simplify config file format and handling ([#33](https://github.com/LazerLab/twitter-panel-api/issues/33)) ([`6fa3023`](https://github.com/LazerLab/twitter-panel-api/commit/6fa3023383e9df9afb8351c6d6173d8068934396))
+
 ## v0.5.0 (2023-04-12)
 ### Breaking
 * Use Flask application factory pattern ([#31](https://github.com/LazerLab/twitter-panel-api/issues/31)) ([`5d22450`](https://github.com/LazerLab/twitter-panel-api/commit/5d224508b63f9d7e3bd6b4c91efd12b2428eec8d))
