@@ -3,7 +3,7 @@ from flask import Flask
 
 from .endpoints import public_api
 
-__version__ = "0.4.2"
+__version__ = "0.5.0"
 
 
 def create_app() -> Flask:

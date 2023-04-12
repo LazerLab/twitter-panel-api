@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.0 (2023-04-12)
+### Breaking
+* Use Flask application factory pattern ([#31](https://github.com/LazerLab/twitter-panel-api/issues/31)) ([`5d22450`](https://github.com/LazerLab/twitter-panel-api/commit/5d224508b63f9d7e3bd6b4c91efd12b2428eec8d))
+
 ## v0.4.2 (2023-04-10)
 ### Fix
 * Raise error on failure for demographic_from_name ([#28](https://github.com/LazerLab/twitter-panel-api/issues/28)) ([`760f157`](https://github.com/LazerLab/twitter-panel-api/commit/760f157143fb7e23f47400240351deccbda32a38))
