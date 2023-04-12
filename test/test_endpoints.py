@@ -4,16 +4,17 @@ from unittest.mock import patch
 
 import pytest
 
+from panel_api import create_app
 from panel_api.api_utils import KeywordQuery
 from panel_api.api_values import Demographic
-from panel_api.app import app as app_singleton
 
 
 @pytest.fixture
 def app():
-    app_singleton.config.update({"TESTING": True})
+    test_app = create_app()
+    test_app.config.update({"TESTING": True})
 
-    yield app_singleton
+    yield test_app
 
 
 @pytest.fixture
@@ -23,7 +24,7 @@ def client(app):
 
 @pytest.fixture
 def mock_censor():
-    with patch("panel_api.app.CensoredSource.query_from_api") as m:
+    with patch("panel_api.endpoints.CensoredSource.query_from_api") as m:
         yield m
 
 
