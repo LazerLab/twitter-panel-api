@@ -1,7 +1,7 @@
 """
 Main Flask application endpoints file. Creates the Flask app on import.
 """
-from flask import Flask, request
+from flask import Blueprint, request
 
 from .api_utils import KeywordQuery
 from .config import get_config_value
@@ -12,11 +12,10 @@ from .sources import (
     PostgresDemographicSource,
 )
 
-app = Flask(__name__)
-app.config.update(get_config_value("flask"))
+public_api = Blueprint("public_api", __name__)
 
 
-@app.route("/keyword_search", methods=["GET", "POST"])
+@public_api.route("/keyword_search", methods=["GET", "POST"])
 def keyword_search():
     """
     basic endpoint for querying the ES-indexed portion of the twitter panel and their
