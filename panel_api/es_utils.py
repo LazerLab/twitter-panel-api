@@ -26,7 +26,7 @@ def elastic_query_for_keyword(
     range_query.update({"gte": after.isoformat()} if after is not None else {})
     if len(range_query) > 0:
         search = search.query(Range(created_at=range_query))
-    res = search.scan()
+    res = (hit.to_dict() for hit in search.scan())
     return res
 
 

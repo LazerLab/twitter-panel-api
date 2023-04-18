@@ -4,9 +4,8 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-from panel_api.api_utils import KeywordQuery
+from panel_api.aggregation.user_demographics import TimeSlicedUserDemographicAggregation
 from panel_api.api_values import Demographic, TimeAggregation
-from panel_api.sources import CompositeSource, MediaSource
 
 from .fixtures.data import tweet_data, tweet_voter_data, voter_data  # noqa: F401
 from .utils import list_equals_ignore_order, period_equals
@@ -34,20 +33,30 @@ def mock_demographic_source():
     return MagicMock()
 
 
-def test_query_daily(
+def aggregation_list_equals(expected, actual, time_slice_column: str):
+    expected = pd.DataFrame(expected)
+    actual = pd.DataFrame(actual)
+    if not set(expected[time_slice_column]) == set(actual[time_slice_column]):
+        return False
+    expected = expected[
+        [col for col in expected.columns if col != time_slice_column]
+    ].to_dict("records")
+    actual = actual[
+        [col for col in actual.columns if col != time_slice_column]
+    ].to_dict("records")
+    return list_equals_ignore_order(expected, actual, period_equals)
+
+
+def test_aggregation_daily(
     tweet_data,
     voter_data,
-    mock_twitter_source,
-    mock_demographic_source,
 ):
-    mock_twitter_source.match_keyword.return_value = tweet_data
-    mock_demographic_source.get_demographics.return_value = pd.DataFrame(voter_data)
-    results = CompositeSource(
-        mock_twitter_source, mock_demographic_source
-    ).query_from_api(KeywordQuery("dinosaur", time_aggregation=TimeAggregation.DAY))
-    mock_twitter_source.match_keyword.assert_called_once_with(
-        keyword="dinosaur", time_range=(None, None)
-    )
+    results = TimeSlicedUserDemographicAggregation(
+        tweet_data,
+        voter_data,
+        time_slice_column="ts",
+        time_aggregation=TimeAggregation.DAY,
+    ).to_list()
 
     expected_results = [
         {
@@ -101,25 +110,20 @@ def test_query_daily(
             "voterbase_race": {"Caucasian": 1},
         },
     ]
-
     print(results)
-    assert list_equals_ignore_order(expected_results, results, period_equals)
+    assert aggregation_list_equals(expected_results, results, "ts")
 
 
-def test_query_weekly(
+def test_aggregation_weekly(
     tweet_data,
     voter_data,
-    mock_twitter_source,
-    mock_demographic_source,
 ):
-    mock_twitter_source.match_keyword.return_value = tweet_data
-    mock_demographic_source.get_demographics.return_value = pd.DataFrame(voter_data)
-    results = CompositeSource(
-        mock_twitter_source, mock_demographic_source
-    ).query_from_api(KeywordQuery("dinosaur", time_aggregation=TimeAggregation.WEEK))
-    mock_twitter_source.match_keyword.assert_called_once_with(
-        keyword="dinosaur", time_range=(None, None)
-    )
+    results = TimeSlicedUserDemographicAggregation(
+        tweet_data,
+        voter_data,
+        time_slice_column="ts",
+        time_aggregation=TimeAggregation.WEEK,
+    ).to_list()
 
     expected_results = [
         {
@@ -157,16 +161,17 @@ def test_query_weekly(
         },
     ]
 
-    assert list_equals_ignore_order(expected_results, results, period_equals)
+    assert aggregation_list_equals(expected_results, results, "ts")
 
 
-def test_table_group_by(tweet_voter_data):
-    results = MediaSource.aggregate_tabular_data(
-        tweet_voter_data,
-        "created_at",
-        time_agg=TimeAggregation.WEEK,
-        group_by=[Demographic.RACE, Demographic.GENDER],
-    )
+def test_table_cross_sections(tweet_data, voter_data):
+    results = TimeSlicedUserDemographicAggregation(
+        tweet_data,
+        voter_data,
+        time_slice_column="ts",
+        time_aggregation=TimeAggregation.WEEK,
+        cross_sections=[Demographic.RACE, Demographic.GENDER],
+    ).to_list()
 
     expected_results = [
         {
@@ -238,4 +243,4 @@ def test_table_group_by(tweet_voter_data):
         },
     ]
 
-    assert list_equals_ignore_order(expected_results, results, period_equals)
+    assert aggregation_list_equals(expected_results, results, "ts")
