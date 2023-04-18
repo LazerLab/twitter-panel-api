@@ -3,9 +3,9 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from panel_api import api_utils
-from panel_api.api_utils import KeywordQuery, demographic_from_name
+from panel_api.api_utils import demographic_from_name, fill_zeros
 from panel_api.api_values import Demographic
+from panel_api.query.keyword_query import KeywordQuery
 
 from .utils import list_equals_ignore_order, period_equals
 
@@ -183,7 +183,7 @@ def test_fill_zeros():
             ).to_dict("records"),
         },
     ]
-    filled_results = api_utils.fill_zeros(sparse_results)
+    filled_results = fill_zeros(sparse_results)
 
     assert list_equals_ignore_order(expected_results, filled_results, period_equals)
 

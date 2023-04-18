@@ -29,16 +29,16 @@ def tweet_data():
 def voter_data():
     return pd.DataFrame(
         [
-            ("0", "AL", "Male", 20, "Caucasian"),
-            ("1", "GA", "Female", 21, "Uncoded"),
-            ("2", "PA", "Male", 30, "Caucasian"),
-            ("3", "MA", "Female", 55, "Asian"),
-            ("4", "MA", "Male", 72, "African-American"),
-            ("5", "IA", "Female", 147, "Hispanic"),
-            ("6", "IL", "Male", 47, "Caucasian"),
-            ("7", "CO", "Female", 32, "Native American"),
-            ("8", "KS", "Male", 43, "Uncoded"),
-            ("9", "CT", "Unknown", 58, "Caucasian"),
+            ("0", "AL", "Male", "under 30", "Caucasian"),
+            ("1", "GA", "Female", "under 30", "Uncoded"),
+            ("2", "PA", "Male", "30 - 40", "Caucasian"),
+            ("3", "MA", "Female", "50 - 60", "Asian"),
+            ("4", "MA", "Male", "70+", "African-American"),
+            ("5", "IA", "Female", "70+", "Hispanic"),
+            ("6", "IL", "Male", "40 - 50", "Caucasian"),
+            ("7", "CO", "Female", "30 - 40", "Native American"),
+            ("8", "KS", "Male", "40 - 50", "Uncoded"),
+            ("9", "CT", "Unknown", "50 - 60", "Caucasian"),
         ],
         columns=[
             "userid",

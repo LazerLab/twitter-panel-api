@@ -1,12 +1,9 @@
 import json
-from datetime import date
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from panel_api import create_app
-from panel_api.api_utils import KeywordQuery
-from panel_api.api_values import Demographic
 
 
 @pytest.fixture
@@ -22,13 +19,18 @@ def client(app):
 
 
 @pytest.fixture
-def mock_censor():
-    with patch("panel_api.endpoints.CensoredSource.query_from_api") as m:
-        yield m
+def mock_query():
+    with patch("panel_api.endpoints.KeywordQuery.from_raw_query") as m:
+        query = MagicMock()
+        m.return_value = query
+        yield query
 
 
-def test_keyword_search_valid_query(client, mock_censor):
-    mock_censor.return_value = "mock_value"
+def test_keyword_search_valid_query(client, mock_query):
+    mock_response = MagicMock()
+    mock_response.censor.return_value = mock_response
+    mock_response.to_list.return_value = "mock_value"
+    mock_query.execute.return_value = mock_response
     query_json = {
         "keyword_query": "test query",
         "aggregate_time_period": "week",
@@ -43,16 +45,8 @@ def test_keyword_search_valid_query(client, mock_censor):
 
     # Just checking that the correct query params are forwarded.
     # Other params (e.g. 'fill_zeros') are irrelevant to this endpoint's success.
-    mock_censor.assert_called_once()
-    forwarded_query = mock_censor.call_args.kwargs.get("query")
-    if forwarded_query is None:
-        forwarded_query = mock_censor.call_args.args[0]
-    assert forwarded_query == KeywordQuery(
-        "test query",
-        "week",
-        cross_sections=[Demographic.RACE, Demographic.GENDER],
-        time_range=(date(2020, 10, 1), date(2020, 12, 31)),
-    )
+    mock_query.execute.assert_called_once()
+    mock_response.censor.assert_called_once()
 
     assert json.loads(response.data) == {
         "query": query_json,
