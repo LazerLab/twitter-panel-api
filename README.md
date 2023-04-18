@@ -3,31 +3,31 @@
 dashboard app for searching twitter panel tweets &amp; aggregating info
 
 ## To get this to work:
-- install the python packages: `pip install -r requirements.txt`
-- have a working elasticsearch instance listening on port 9200 (or change the port in the code as needed)
+- install dependencies: `pip install -r requirements.txt`
+- install this package: `pip install .`
+- have a working elasticsearch instance for Twitter data listening at `ELASTICSEARCH_URL` in the config file
+- have a working postgresql database for demographic data listening at `DATABASE_URL` in the config file
 - have a port you can use for a Flask app.
-
-** Note: on achtung06, we already have an ES instance up that is populated with some data for testing. 
-It is listening on port 9200. Probably it's good to do development on achtung06 for this reason.
-** 
 
 ## Steps to make this do stuff:
 - Ingest Tweets into Elasticsearch
 - Ingest voters into PostgreSQL
-- Create a config JSON file, modifying the defaults seen in `config.py`
-- Launch the Flask app (`CONFIG=/path/to/config.json flask run --port 5010 --host 0.0.0.0`)
-- ssh into achtung: `ssh -L localhost:5010:achtung06:5010 $username@achtung.ccs.neu.edu`
+- Create a config JSON file, modifying the defaults seen in `panel_api/__init__.py`
+- Launch the Flask app (`API_CONFIG=/path/to/config.json gunicorn --bind 127.0.0.1:8000 'panel_api:create_app()'`)
 - Submit queries
-- If you want to debug the app, you'll have to take it down (ctrl-c) and relaunch (see above). Should go down & come back up pretty fast.
 
 ## Querying the Data
-Currently, only the `/keyword_search` endpoint is functioning.
+Currently, only the `/keyword_search` endpoint is available.
 
 `/keyword_search`:
 
 Parameters:
-- keyword_query: string
-- aggregate_time_period: string (day|week|month)
+- (required) keyword_query: string
+- (required) aggregate_time_period: string (day|week|month)
+- (optional) cross_sections: array
+  - type: string (age|race|gender|state)
+- (optional) before: string (ISO 8601 date string)
+- (optional) after: string (ISO 8601 date string)
 
 
 ### Example
@@ -49,15 +49,15 @@ Response:
     {
       "n_tweeters": 1025,
       "n_tweets": 110,
-      "ts": "Mon, 28 Sep 2020 00:00:00 GMT",
+      "ts": "2020-09-28T00:00:00.000",
       "tsmart_state": {
         "AK": 1,
         "AL": 3,
         ...
       },
       "vb_age_decade": {
-        "10 - 20": 12,
-        "20 - 30": 400,
+        "under 30": 12,
+        "30 - 40": 400,
         ...
         "unknown": 10
       },
