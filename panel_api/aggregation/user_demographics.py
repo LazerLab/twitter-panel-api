@@ -41,7 +41,10 @@ class TimeSlicedUserDemographicAggregation:
         time_slice_column (str): Optional. Name of the time-slice field to create
         """
         self.time_slice_column: str = time_slice_column
-        self.cross_sections: Optional[list[Demographic]] = cross_sections
+        if cross_sections is None or len(cross_sections) == 0:
+            self.cross_sections: Optional[list[Demographic]] = None
+        else:
+            self.cross_sections = list(cross_sections)
 
         user_demographics = user_demographics.rename(
             columns={"userid": "userid_demographics"}
@@ -106,13 +109,14 @@ class TimeSlicedUserDemographicAggregation:
             self.demographic_distributions[dem] = censor_table(
                 self.demographic_distributions[dem],
                 min_displayed_count=min_displayed_users,
-            )
+            ).dropna()
 
         if self.cross_sections is not None:
             self.cross_sections_table["count"] = censor_table(
                 self.cross_sections_table["count"],
                 min_displayed_count=min_displayed_users,
             )
+            self.cross_sections_table = self.cross_sections_table.dropna()
 
         return self
 
@@ -121,6 +125,8 @@ class TimeSlicedUserDemographicAggregation:
         Convert this aggregation into a JSON serializable Python list.
         """
         records = self.counts.reset_index().to_dict("records")
+        for record in records:
+            record.update(**self._base_record_tables())
         indexed_records = {record[self.time_slice_column]: record for record in records}
         for dem in Demographic:
             for ts, table in (
@@ -137,6 +143,14 @@ class TimeSlicedUserDemographicAggregation:
                     [*self.cross_sections, "count"]
                 ].to_dict("records")
         return records
+
+    def _base_record_tables(self) -> dict[str, Any]:
+        base_record: dict[str, Any] = {}
+        for dem in Demographic:
+            base_record[dem] = {}
+        if self.cross_sections is not None:
+            base_record["groups"] = []
+        return base_record
 
     def _fill_zeros(self) -> Tuple:
         time_slices = self.counts.reset_index()[
