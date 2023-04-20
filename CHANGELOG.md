@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.1 (2023-04-20)
+### Fix
+* Standardize list output for empty timeslice ([#36](https://github.com/LazerLab/twitter-panel-api/issues/36)) ([`2995d1b`](https://github.com/LazerLab/twitter-panel-api/commit/2995d1b4541913affedb24bbb4f816cdd534b871))
+
 ## v0.6.0 (2023-04-12)
 ### Feature
 * Simplify config file format and handling ([#33](https://github.com/LazerLab/twitter-panel-api/issues/33)) ([`6fa3023`](https://github.com/LazerLab/twitter-panel-api/commit/6fa3023383e9df9afb8351c6d6173d8068934396))
