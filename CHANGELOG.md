@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.2 (2023-04-21)
+### Fix
+* Return proper columns from an empty Demographic DataFrame ([#37](https://github.com/LazerLab/twitter-panel-api/issues/37)) ([`165b50b`](https://github.com/LazerLab/twitter-panel-api/commit/165b50b241d30717638eb8761d5119db1e23da54))
+
 ## v0.6.1 (2023-04-20)
 ### Fix
 * Standardize list output for empty timeslice ([#36](https://github.com/LazerLab/twitter-panel-api/issues/36)) ([`2995d1b`](https://github.com/LazerLab/twitter-panel-api/commit/2995d1b4541913affedb24bbb4f816cdd534b871))

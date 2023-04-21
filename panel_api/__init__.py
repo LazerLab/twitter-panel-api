@@ -6,7 +6,7 @@ from flask import Flask
 
 from .endpoints import public_api
 
-__version__ = "0.6.1"
+__version__ = "0.6.2"
 
 default_settings = {
     "MIN_DISPLAYED_USERS": 10,
