@@ -59,6 +59,8 @@ class PostgresDemographicSource(DemographicSource):
             twitter_ids=twitter_user_ids, connection_params=self.connection_params
         )
         voters_df = pd.DataFrame(dict(voter) for voter in voters)
+        if len(voters_df) == 0:
+            return pd.DataFrame(columns=["userid", *Demographic])
         voters_df.rename(
             columns={
                 "twProfileID": "userid",
