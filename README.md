@@ -93,3 +93,23 @@ All pull requests to this repository must pass a few automated checks before the
   - Ensure `make test` passes for your code. At present, this just runs the existing unit tests. If you add/change functionality, it would be wonderful if you also add tests for that in the same PR. Also, I recommend putting `make test` in a Git hook.
 - Conventional PR Title
   - When creating a PR, write the title to follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) format. This helps readers understand what the PR is doing and keeps the commit history tidy. This is also a strict requirement because these commit labels allow automatic semantic version bumps.
+
+## Quickstart
+
+If you are new to this repository, then this serves quickstart for understanding the general processes in the codebase.
+
+### Query Walkthrough
+
+A user submits a JSON query to the API, which is then parsed into a query object, found in the `query/` directory. That query is then executed, which collects data from a `TweetSource` and a `DemographicSource`. The data is then passed to an aggregation. An aggregation is required for any queries that involve sensitive demographic data; the goal is to remove individual identifiability before returning data. This aggregation can be further censored to a specific user threshold if needed to protect privacy. It is then returned to the user.
+
+### Sources
+
+As of writing this quickstart, `TweetSource` implies Elasticsearch and `DemographicSource` implies PostgreSQL. `TweetSource` expects a "tweets" index or alias in Elasticsearch to exist, which will be searched. `DemographicSource` expects a "voters" table in the PostgreSQL database to exist. These sources are set in config options, but they will not work with any other source types, currently.
+
+The one exception is the ATTACHED source type. This source should only be used for testing, and it has no logic associated with it. A query on an ATTACHED source will return all the attached data. To use this in testing, mock the Flask app object (such that `current_app` points to your mock) and modify its config to have the "SOURCE" field be "attached" and the "ATTACHED_DATA" field be the data you want returned.
+
+### Testing
+
+All tests should go in the `test/` directory at the root of the project. They are kept separate to decouple the test dependencies from the package dependencies. Presently, they all reside in `requirements.txt`, but that can be changed if there is a compelling reason to.
+
+Try to avoid dependencies between modules that run tests. If there is functionality that would be useful in multiple files, put it in a shared location, like the `test/fixtures/` directory.
